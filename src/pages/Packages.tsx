@@ -1,5 +1,4 @@
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
+import AppLayout from "@/components/layout/AppLayout";
 import InvestmentPackageCard from "@/components/packages/InvestmentPackageCard";
 
 const packages = [
@@ -121,38 +120,34 @@ const packages = [
 
 const Packages = () => {
   return (
-    <div className="min-h-screen">
-      <Navbar />
-      <main className="pt-24 md:pt-28 pb-20">
-        <div className="container mx-auto px-4">
-          {/* Header */}
-          <div className="text-center max-w-3xl mx-auto mb-12 md:mb-16">
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-              Investment <span className="text-gradient">Packages</span>
-            </h1>
-            <p className="text-lg text-muted-foreground">
-              Choose the perfect plan for your investment goals. All packages include our cutting-edge AI trading technology.
-            </p>
-          </div>
-
-          {/* Packages Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
-            {packages.map((pkg, index) => (
-              <InvestmentPackageCard key={index} {...pkg} />
-            ))}
-          </div>
-
-          {/* Disclaimer */}
-          <div className="mt-12 p-6 bg-secondary/50 rounded-2xl text-center">
-            <p className="text-sm text-muted-foreground">
-              <strong>Risk Disclosure:</strong> All investments involve risk. Past performance is not indicative of future results. 
-              Please invest responsibly and only with funds you can afford to lose.
-            </p>
-          </div>
+    <AppLayout>
+      <div className="p-4 lg:p-6 space-y-6">
+        {/* Header */}
+        <div className="text-center max-w-2xl mx-auto">
+          <h1 className="text-2xl md:text-3xl font-bold mb-2">
+            Investment <span className="text-gradient">Packages</span>
+          </h1>
+          <p className="text-muted-foreground">
+            Choose the perfect plan for your investment goals. All packages include our cutting-edge AI trading technology.
+          </p>
         </div>
-      </main>
-      <Footer />
-    </div>
+
+        {/* Packages Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+          {packages.map((pkg, index) => (
+            <InvestmentPackageCard key={index} {...pkg} />
+          ))}
+        </div>
+
+        {/* Disclaimer */}
+        <div className="p-4 bg-secondary/50 rounded-xl text-center">
+          <p className="text-xs text-muted-foreground">
+            <strong>Risk Disclosure:</strong> All investments involve risk. Past performance is not indicative of future results.
+            Please invest responsibly and only with funds you can afford to lose.
+          </p>
+        </div>
+      </div>
+    </AppLayout>
   );
 };
 
