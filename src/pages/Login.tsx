@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import { 
   Eye, 
   EyeOff, 
@@ -24,6 +25,8 @@ import {
 const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { signIn, user, loading: authLoading } = useAuth();
+  
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -41,6 +44,13 @@ const Login = () => {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (!authLoading && user) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [user, authLoading, navigate]);
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -96,33 +106,46 @@ const Login = () => {
 
     setIsLoading(true);
 
-    // Simulated authentication flow
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    const { error } = await signIn(formData.email, formData.password);
 
-    // Simulate checking credentials (for demo, accept any valid format)
-    const isValidCredentials = formData.email && formData.password.length >= 6;
-
-    if (isValidCredentials) {
-      setIsSuccess(true);
-      toast({
-        title: "Login Successful! 🎉",
-        description: "Redirecting to your dashboard...",
-      });
-      
-      // Wait for success animation before redirecting
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      navigate("/dashboard");
-    } else {
+    if (error) {
       setIsLoading(false);
+      let errorMessage = "Invalid email or password. Please try again.";
+      
+      if (error.message.includes("Invalid login credentials")) {
+        errorMessage = "Invalid email or password. Please check your credentials.";
+      } else if (error.message.includes("Email not confirmed")) {
+        errorMessage = "Please verify your email before logging in.";
+      }
+      
       toast({
         title: "Login Failed",
-        description: "Invalid email or password. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
+      return;
     }
+
+    setIsSuccess(true);
+    toast({
+      title: "Login Successful! 🎉",
+      description: "Redirecting to your dashboard...",
+    });
+    
+    // Wait for success animation before redirecting
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    navigate("/dashboard");
   };
 
   const isFormValid = !validateEmail(formData.email) && !validatePassword(formData.password);
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
