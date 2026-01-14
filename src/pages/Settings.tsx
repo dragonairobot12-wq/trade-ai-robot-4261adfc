@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,8 +22,10 @@ import {
   Eye,
   EyeOff,
   CheckCircle2,
+  LogOut,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Settings = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -33,12 +36,19 @@ const Settings = () => {
     marketing: false,
   });
   const { toast } = useToast();
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
 
   const handleSave = () => {
     toast({
       title: "Settings Saved",
       description: "Your preferences have been updated successfully",
     });
+  };
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate("/login");
   };
 
   return (
@@ -338,6 +348,26 @@ const Settings = () => {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Logout Section */}
+        <Card className="border-destructive/20">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center">
+                  <LogOut className="w-5 h-5 text-destructive" />
+                </div>
+                <div>
+                  <p className="font-medium">Sign Out</p>
+                  <p className="text-sm text-muted-foreground">Log out of your account</p>
+                </div>
+              </div>
+              <Button variant="destructive" onClick={handleLogout}>
+                Logout
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </AppLayout>
   );

@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { Bell, Search, Menu, Bot, Moon, Sun } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Bell, Search, Menu, Bot, Moon, Sun, LogOut } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -19,10 +20,17 @@ interface TopBarProps {
 
 const TopBar = ({ onMenuClick }: TopBarProps) => {
   const [isDark, setIsDark] = useState(true);
+  const { signOut, user } = useAuth();
+  const navigate = useNavigate();
 
   const toggleTheme = () => {
     setIsDark(!isDark);
     document.documentElement.classList.toggle("dark");
+  };
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate("/login");
   };
 
   return (
@@ -128,7 +136,13 @@ const TopBar = ({ onMenuClick }: TopBarProps) => {
                 <Link to="/history">Transaction History</Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive">Logout</DropdownMenuItem>
+              <DropdownMenuItem 
+                className="text-destructive cursor-pointer"
+                onClick={handleLogout}
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Logout
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
