@@ -1,124 +1,87 @@
 import AppLayout from "@/components/layout/AppLayout";
 import InvestmentPackageCard from "@/components/packages/InvestmentPackageCard";
+import { useInvestments } from "@/hooks/useInvestments";
+import { Skeleton } from "@/components/ui/skeleton";
 
-const packages = [
-  {
-    amount: 100,
-    name: "Starter Package",
-    roi: "15%",
-    duration: "30 days",
-    riskLevel: "Low" as const,
-    strategy: "Conservative algorithm focusing on stable crypto and forex pairs with minimal volatility exposure.",
-    features: [
+// Default features for each package tier
+const getPackageFeatures = (price: number): string[] => {
+  if (price <= 200) {
+    return [
       "AI-powered trading",
       "Daily profit updates",
       "24/7 support",
       "Withdrawal anytime",
-    ],
-  },
-  {
-    amount: 300,
-    name: "Basic Package",
-    roi: "20%",
-    duration: "30 days",
-    riskLevel: "Low" as const,
-    strategy: "Balanced approach combining low-risk forex trading with select cryptocurrency opportunities.",
-    features: [
+    ];
+  } else if (price <= 500) {
+    return [
       "Enhanced AI algorithms",
       "Daily profit updates",
       "Priority support",
       "Compound interest option",
-    ],
-  },
-  {
-    amount: 600,
-    name: "Standard Package",
-    roi: "25%",
-    duration: "30 days",
-    riskLevel: "Medium" as const,
-    strategy: "Multi-market strategy across forex, crypto, and commodities with dynamic risk management.",
-    features: [
+    ];
+  } else if (price <= 1000) {
+    return [
       "Advanced AI trading",
       "Real-time analytics",
       "Dedicated support",
       "Auto-reinvestment",
-    ],
-    popular: true,
-  },
-  {
-    amount: 1000,
-    name: "Professional Package",
-    roi: "30%",
-    duration: "30 days",
-    riskLevel: "Medium" as const,
-    strategy: "Aggressive growth algorithm leveraging market volatility with sophisticated hedging techniques.",
-    features: [
+    ];
+  } else if (price <= 2000) {
+    return [
       "Premium AI engine",
       "Portfolio diversification",
       "VIP support line",
       "Weekly reports",
-    ],
-  },
-  {
-    amount: 1800,
-    name: "Advanced Package",
-    roi: "35%",
-    duration: "30 days",
-    riskLevel: "Medium-High" as const,
-    strategy: "High-frequency trading algorithm with real-time market sentiment analysis and arbitrage detection.",
-    features: [
+    ];
+  } else if (price <= 3000) {
+    return [
       "Elite AI trading",
       "Personal account manager",
       "Custom strategies",
       "Insurance protection",
-    ],
-  },
-  {
-    amount: 2500,
-    name: "Premium Package",
-    roi: "38%",
-    duration: "30 days",
-    riskLevel: "Medium-High" as const,
-    strategy: "Multi-layered neural network analyzing global markets with predictive modeling capabilities.",
-    features: [
+    ];
+  } else if (price <= 4000) {
+    return [
       "Institutional-grade AI",
       "24/7 personal manager",
       "Early access features",
       "Bonus rewards",
-    ],
-  },
-  {
-    amount: 3500,
-    name: "Elite Package",
-    roi: "42%",
-    duration: "30 days",
-    riskLevel: "High" as const,
-    strategy: "Maximum growth potential using advanced machine learning with quantum-inspired optimization.",
-    features: [
+    ];
+  } else if (price <= 5000) {
+    return [
       "Cutting-edge AI",
       "Private trading room",
       "Exclusive insights",
       "Priority withdrawals",
-    ],
-  },
-  {
-    amount: 5000,
-    name: "VIP Package",
-    roi: "45%",
-    duration: "30 days",
-    riskLevel: "High" as const,
-    strategy: "Ultimate AI suite combining all strategies with personalized risk management and maximum return potential.",
-    features: [
+    ];
+  } else {
+    return [
       "All premium features",
       "1-on-1 consultations",
       "Highest priority",
       "Exclusive VIP events",
-    ],
-    vip: true,
-  },
-];
+    ];
+  }
+};
+
+// Map risk level from DB to display format
+const mapRiskLevel = (risk: string): "Low" | "Medium" | "Medium-High" | "High" => {
+  const riskMap: Record<string, "Low" | "Medium" | "Medium-High" | "High"> = {
+    low: "Low",
+    medium: "Medium",
+    "medium-high": "Medium-High",
+    high: "High",
+  };
+  return riskMap[risk.toLowerCase()] || "Medium";
+};
 
 const Packages = () => {
+  const { packages, isLoading, createInvestment } = useInvestments();
+
+  const handleInvest = (packageId: string, amount: number) => {
+    createInvestment.mutate({ packageId, amount });
+  };
+
   return (
     <AppLayout>
       <div className="p-4 lg:p-6 space-y-6">
@@ -134,9 +97,47 @@ const Packages = () => {
 
         {/* Packages Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-          {packages.map((pkg, index) => (
-            <InvestmentPackageCard key={index} {...pkg} />
-          ))}
+          {isLoading ? (
+            // Loading skeletons
+            Array.from({ length: 8 }).map((_, index) => (
+              <div key={index} className="p-6 bg-card rounded-2xl border border-border">
+                <div className="text-center mb-6">
+                  <Skeleton className="h-4 w-24 mx-auto mb-2" />
+                  <Skeleton className="h-10 w-32 mx-auto" />
+                </div>
+                <div className="grid grid-cols-3 gap-3 mb-6">
+                  <Skeleton className="h-20 rounded-xl" />
+                  <Skeleton className="h-20 rounded-xl" />
+                  <Skeleton className="h-20 rounded-xl" />
+                </div>
+                <Skeleton className="h-24 rounded-xl mb-6" />
+                <div className="space-y-3 mb-8">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                </div>
+                <Skeleton className="h-12 w-full rounded-lg" />
+              </div>
+            ))
+          ) : (
+            packages.map((pkg, index) => (
+              <InvestmentPackageCard
+                key={pkg.id}
+                id={pkg.id}
+                amount={pkg.price}
+                name={pkg.name}
+                roi={`${pkg.roi}%`}
+                duration={`${pkg.duration_days} days`}
+                riskLevel={mapRiskLevel(pkg.risk_level)}
+                strategy={pkg.ai_strategy || pkg.description || "AI-powered trading strategy"}
+                features={getPackageFeatures(pkg.price)}
+                popular={index === 2} // 3rd package is popular
+                vip={index === packages.length - 1} // Last package is VIP
+                onInvest={handleInvest}
+                isInvesting={createInvestment.isPending}
+              />
+            ))
+          )}
         </div>
 
         {/* Disclaimer */}
