@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Bell, Search, Menu, Bot, Moon, Sun, LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/hooks/useProfile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +22,16 @@ interface TopBarProps {
 const TopBar = ({ onMenuClick }: TopBarProps) => {
   const [isDark, setIsDark] = useState(true);
   const { signOut, user } = useAuth();
+  const { profile } = useProfile();
   const navigate = useNavigate();
+
+  const displayName = profile?.full_name || user?.email?.split("@")[0] || "User";
+  const initials = displayName
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 
   const toggleTheme = () => {
     setIsDark(!isDark);
@@ -115,11 +125,11 @@ const TopBar = ({ onMenuClick }: TopBarProps) => {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="flex items-center gap-2 px-2">
                 <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center">
-                  <span className="text-primary-foreground font-semibold text-sm">JD</span>
+                  <span className="text-primary-foreground font-semibold text-sm">{initials}</span>
                 </div>
                 <div className="hidden md:block text-left">
-                  <p className="text-sm font-medium">John Doe</p>
-                  <p className="text-xs text-muted-foreground">Premium</p>
+                  <p className="text-sm font-medium">{displayName}</p>
+                  <p className="text-xs text-muted-foreground">{user?.email}</p>
                 </div>
               </Button>
             </DropdownMenuTrigger>
