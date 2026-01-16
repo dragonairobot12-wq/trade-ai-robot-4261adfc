@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Settings as SettingsIcon,
   User,
@@ -23,9 +24,13 @@ import {
   EyeOff,
   CheckCircle2,
   LogOut,
+  Calendar,
+  Loader2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/hooks/useProfile";
+import { format } from "date-fns";
 
 const Settings = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -36,13 +41,39 @@ const Settings = () => {
     marketing: false,
   });
   const { toast } = useToast();
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
+  const { profile, isLoading, updateProfile } = useProfile();
   const navigate = useNavigate();
 
+  const [formData, setFormData] = useState({
+    full_name: "",
+    email: "",
+    phone: "",
+  });
+
+  useEffect(() => {
+    if (profile) {
+      const nameParts = (profile.full_name || "").split(" ");
+      setFormData({
+        full_name: profile.full_name || "",
+        email: profile.email || "",
+        phone: profile.phone || "",
+      });
+    }
+  }, [profile]);
+
+  const displayName = profile?.full_name || user?.email?.split("@")[0] || "User";
+  const initials = displayName
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+
   const handleSave = () => {
-    toast({
-      title: "Settings Saved",
-      description: "Your preferences have been updated successfully",
+    updateProfile.mutate({
+      full_name: formData.full_name,
+      phone: formData.phone,
     });
   };
 
@@ -91,46 +122,80 @@ const Settings = () => {
                 <CardDescription>Update your personal details</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Avatar */}
-                <div className="flex items-center gap-4">
-                  <div className="w-20 h-20 rounded-full gradient-primary flex items-center justify-center">
-                    <span className="text-2xl font-bold text-primary-foreground">JD</span>
+                {isLoading ? (
+                  <div className="space-y-4">
+                    <Skeleton className="h-20 w-20 rounded-full" />
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
                   </div>
-                  <div>
-                    <Button variant="outline" size="sm">
-                      Change Avatar
+                ) : (
+                  <>
+                    {/* Avatar */}
+                    <div className="flex items-center gap-4">
+                      <div className="w-20 h-20 rounded-full gradient-primary flex items-center justify-center">
+                        <span className="text-2xl font-bold text-primary-foreground">{initials}</span>
+                      </div>
+                      <div>
+                        <p className="font-semibold text-lg">{displayName}</p>
+                        <p className="text-sm text-muted-foreground">{profile?.email}</p>
+                        {profile?.created_at && (
+                          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                            <Calendar className="w-3 h-3" />
+                            Member since {format(new Date(profile.created_at), "MMMM d, yyyy")}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    {/* Form */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2 md:col-span-2">
+                        <Label>Full Name</Label>
+                        <Input 
+                          value={formData.full_name}
+                          onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                          placeholder="Enter your full name"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Email</Label>
+                        <Input 
+                          type="email" 
+                          value={formData.email}
+                          disabled
+                          className="bg-muted/50"
+                        />
+                        <p className="text-xs text-muted-foreground">Email cannot be changed</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Phone</Label>
+                        <Input 
+                          type="tel" 
+                          value={formData.phone}
+                          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                          placeholder="+1 (555) 000-0000"
+                        />
+                      </div>
+                    </div>
+
+                    <Button 
+                      variant="gradient" 
+                      onClick={handleSave}
+                      disabled={updateProfile.isPending}
+                    >
+                      {updateProfile.isPending ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        "Save Changes"
+                      )}
                     </Button>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      JPG, GIF or PNG. Max size 2MB
-                    </p>
-                  </div>
-                </div>
-
-                <Separator />
-
-                {/* Form */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>First Name</Label>
-                    <Input defaultValue="John" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Last Name</Label>
-                    <Input defaultValue="Doe" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Email</Label>
-                    <Input type="email" defaultValue="john.doe@example.com" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Phone</Label>
-                    <Input type="tel" defaultValue="+1 234 567 8900" />
-                  </div>
-                </div>
-
-                <Button variant="gradient" onClick={handleSave}>
-                  Save Changes
-                </Button>
+                  </>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
