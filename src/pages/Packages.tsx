@@ -1,7 +1,8 @@
 import AppLayout from "@/components/layout/AppLayout";
-import InvestmentPackageCard from "@/components/packages/InvestmentPackageCard";
+import Premium3DPackageCard from "@/components/packages/Premium3DPackageCard";
 import { useInvestments } from "@/hooks/useInvestments";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TrendingUp, Shield, Sparkles } from "lucide-react";
 
 // Default features for each package tier
 const getPackageFeatures = (price: number): string[] => {
@@ -75,6 +76,42 @@ const mapRiskLevel = (risk: string): "Low" | "Medium" | "Medium-High" | "High" =
   return riskMap[risk.toLowerCase()] || "Medium";
 };
 
+const LoadingSkeleton = () => (
+  <div className="relative p-5 md:p-6 bg-card rounded-2xl border border-border/50 overflow-hidden">
+    {/* Shimmer effect */}
+    <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-secondary/50 to-transparent" />
+    
+    {/* Icon skeleton */}
+    <div className="absolute -top-2 right-4">
+      <Skeleton className="w-14 h-14 rounded-xl" />
+    </div>
+    
+    <div className="pt-6">
+      <div className="text-center mb-4">
+        <Skeleton className="h-3 w-20 mx-auto mb-2" />
+        <Skeleton className="h-10 w-28 mx-auto" />
+      </div>
+      
+      <div className="grid grid-cols-3 gap-2 mb-4">
+        <Skeleton className="h-20 rounded-xl" />
+        <Skeleton className="h-20 rounded-xl" />
+        <Skeleton className="h-20 rounded-xl" />
+      </div>
+      
+      <Skeleton className="h-20 rounded-xl mb-4" />
+      
+      <div className="space-y-2 mb-5">
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-5/6" />
+        <Skeleton className="h-4 w-4/5" />
+        <Skeleton className="h-4 w-full" />
+      </div>
+      
+      <Skeleton className="h-11 w-full rounded-lg" />
+    </div>
+  </div>
+);
+
 const Packages = () => {
   const { packages, isLoading, createInvestment } = useInvestments();
 
@@ -82,46 +119,53 @@ const Packages = () => {
     createInvestment.mutate({ packageId, amount });
   };
 
+  // Sort packages by price
+  const sortedPackages = [...(packages || [])].sort((a, b) => a.price - b.price);
+
   return (
     <AppLayout>
-      <div className="p-4 lg:p-6 space-y-6">
-        {/* Header */}
-        <div className="text-center max-w-2xl mx-auto">
-          <h1 className="text-2xl md:text-3xl font-bold mb-2">
-            Investment <span className="text-gradient">Packages</span>
+      <div className="p-4 lg:p-6 space-y-8">
+        {/* Header Section */}
+        <div className="text-center max-w-3xl mx-auto space-y-4">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium">
+            <Sparkles className="w-4 h-4" />
+            AI-Powered Investment Packages
+          </div>
+          
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold">
+            Choose Your <span className="text-gradient">Investment Plan</span>
           </h1>
-          <p className="text-muted-foreground">
-            Choose the perfect plan for your investment goals. All packages include our cutting-edge AI trading technology.
+          
+          <p className="text-muted-foreground text-base md:text-lg max-w-2xl mx-auto">
+            Unlock the power of AI-driven wealth management. Select a package that matches your investment goals and risk appetite.
           </p>
+          
+          {/* Stats Banner */}
+          <div className="flex flex-wrap justify-center gap-6 pt-4">
+            <div className="flex items-center gap-2 text-sm">
+              <div className="w-8 h-8 rounded-lg bg-success/10 flex items-center justify-center">
+                <TrendingUp className="w-4 h-4 text-success" />
+              </div>
+              <span className="text-muted-foreground">Up to <span className="font-semibold text-foreground">35% ROI</span></span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Shield className="w-4 h-4 text-primary" />
+              </div>
+              <span className="text-muted-foreground"><span className="font-semibold text-foreground">Secure</span> & Insured</span>
+            </div>
+          </div>
         </div>
 
         {/* Packages Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
           {isLoading ? (
-            // Loading skeletons
             Array.from({ length: 8 }).map((_, index) => (
-              <div key={index} className="p-6 bg-card rounded-2xl border border-border">
-                <div className="text-center mb-6">
-                  <Skeleton className="h-4 w-24 mx-auto mb-2" />
-                  <Skeleton className="h-10 w-32 mx-auto" />
-                </div>
-                <div className="grid grid-cols-3 gap-3 mb-6">
-                  <Skeleton className="h-20 rounded-xl" />
-                  <Skeleton className="h-20 rounded-xl" />
-                  <Skeleton className="h-20 rounded-xl" />
-                </div>
-                <Skeleton className="h-24 rounded-xl mb-6" />
-                <div className="space-y-3 mb-8">
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-3/4" />
-                </div>
-                <Skeleton className="h-12 w-full rounded-lg" />
-              </div>
+              <LoadingSkeleton key={index} />
             ))
           ) : (
-            packages.map((pkg, index) => (
-              <InvestmentPackageCard
+            sortedPackages.map((pkg, index) => (
+              <Premium3DPackageCard
                 key={pkg.id}
                 id={pkg.id}
                 amount={pkg.price}
@@ -131,8 +175,9 @@ const Packages = () => {
                 riskLevel={mapRiskLevel(pkg.risk_level)}
                 strategy={pkg.ai_strategy || pkg.description || "AI-powered trading strategy"}
                 features={getPackageFeatures(pkg.price)}
-                popular={index === 2} // 3rd package is popular
-                vip={index === packages.length - 1} // Last package is VIP
+                popular={index === 2}
+                vip={index === sortedPackages.length - 1}
+                tierIndex={index}
                 onInvest={handleInvest}
                 isInvesting={createInvestment.isPending}
               />
@@ -140,11 +185,31 @@ const Packages = () => {
           )}
         </div>
 
+        {/* Trust Indicators */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="p-4 bg-card rounded-xl border border-border/50 text-center">
+            <div className="text-2xl font-bold text-gradient">$50M+</div>
+            <div className="text-xs text-muted-foreground">Total Invested</div>
+          </div>
+          <div className="p-4 bg-card rounded-xl border border-border/50 text-center">
+            <div className="text-2xl font-bold text-gradient">25K+</div>
+            <div className="text-xs text-muted-foreground">Active Investors</div>
+          </div>
+          <div className="p-4 bg-card rounded-xl border border-border/50 text-center">
+            <div className="text-2xl font-bold text-gradient">99.9%</div>
+            <div className="text-xs text-muted-foreground">Uptime</div>
+          </div>
+          <div className="p-4 bg-card rounded-xl border border-border/50 text-center">
+            <div className="text-2xl font-bold text-gradient">24/7</div>
+            <div className="text-xs text-muted-foreground">AI Trading</div>
+          </div>
+        </div>
+
         {/* Disclaimer */}
-        <div className="p-4 bg-secondary/50 rounded-xl text-center">
-          <p className="text-xs text-muted-foreground">
-            <strong>Risk Disclosure:</strong> All investments involve risk. Past performance is not indicative of future results.
-            Please invest responsibly and only with funds you can afford to lose.
+        <div className="p-4 bg-secondary/30 rounded-xl border border-border/30 text-center">
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            <strong className="text-foreground">Risk Disclosure:</strong> All investments involve risk. Past performance is not indicative of future results.
+            Please invest responsibly and only with funds you can afford to lose. Returns are not guaranteed.
           </p>
         </div>
       </div>
