@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { TrendingUp, Mail, Phone, MapPin } from "lucide-react";
+import { TrendingUp, Mail, MapPin } from "lucide-react";
+
 const Footer = () => {
   return <footer className="bg-secondary text-secondary-foreground">
       <div className="container mx-auto px-4 py-12 md:py-16">

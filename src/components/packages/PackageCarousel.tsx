@@ -49,14 +49,17 @@ const PackageCarousel = ({ children }: PackageCarouselProps) => {
     };
   }, [emblaApi, onSelect]);
 
+  // Ensure children is always an array
+  const items = Array.isArray(children) ? children : [children];
+
   return (
     <div className="relative">
       {/* Carousel Container */}
       <div className="overflow-hidden" ref={emblaRef}>
         <div className="flex touch-pan-y -ml-3">
-          {children.map((child, index) => (
+          {items.map((child, index) => (
             <div 
-              key={index} 
+              key={`carousel-item-${index}`} 
               className={cn(
                 "flex-[0_0_85%] min-w-0 pl-3 transition-all duration-300",
                 index === selectedIndex ? "scale-100 opacity-100" : "scale-95 opacity-70"
@@ -102,9 +105,9 @@ const PackageCarousel = ({ children }: PackageCarouselProps) => {
 
       {/* Dot Indicators */}
       <div className="flex justify-center gap-1.5 mt-4">
-        {children.map((_, index) => (
+        {items.map((_, index) => (
           <button
-            key={index}
+            key={`dot-${index}`}
             onClick={() => scrollTo(index)}
             className={cn(
               "h-2 rounded-full transition-all duration-300",
