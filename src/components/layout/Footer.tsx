@@ -1,9 +1,7 @@
 import { Link } from "react-router-dom";
 import { TrendingUp, Mail, Phone, MapPin } from "lucide-react";
-
 const Footer = () => {
-  return (
-    <footer className="bg-secondary text-secondary-foreground">
+  return <footer className="bg-secondary text-secondary-foreground">
       <div className="container mx-auto px-4 py-12 md:py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
           {/* Brand */}
@@ -23,16 +21,11 @@ const Footer = () => {
           <div>
             <h4 className="font-semibold mb-4">Quick Links</h4>
             <ul className="space-y-2">
-              {["Home", "Packages", "Dashboard", "FAQ", "Contact"].map((link) => (
-                <li key={link}>
-                  <Link
-                    to={`/${link.toLowerCase() === "home" ? "" : link.toLowerCase()}`}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
+              {["Home", "Packages", "Dashboard", "FAQ", "Contact"].map(link => <li key={link}>
+                  <Link to={`/${link.toLowerCase() === "home" ? "" : link.toLowerCase()}`} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                     {link}
                   </Link>
-                </li>
-              ))}
+                </li>)}
             </ul>
           </div>
 
@@ -40,16 +33,11 @@ const Footer = () => {
           <div>
             <h4 className="font-semibold mb-4">Legal</h4>
             <ul className="space-y-2">
-              {["Privacy Policy", "Terms of Service", "Risk Disclosure", "AML Policy"].map((link) => (
-                <li key={link}>
-                  <Link
-                    to="#"
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
+              {["Privacy Policy", "Terms of Service", "Risk Disclosure", "AML Policy"].map(link => <li key={link}>
+                  <Link to="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                     {link}
                   </Link>
-                </li>
-              ))}
+                </li>)}
             </ul>
           </div>
 
@@ -61,10 +49,7 @@ const Footer = () => {
                 <Mail className="w-4 h-4" />
                 support@wealthai.com
               </li>
-              <li className="flex items-center gap-3 text-sm text-muted-foreground">
-                <Phone className="w-4 h-4" />
-                +1 (555) 123-4567
-              </li>
+              
               <li className="flex items-start gap-3 text-sm text-muted-foreground">
                 <MapPin className="w-4 h-4 mt-0.5" />
                 123 Finance Street, New York, NY 10001
@@ -82,8 +67,6 @@ const Footer = () => {
           </p>
         </div>
       </div>
-    </footer>
-  );
+    </footer>;
 };
-
 export default Footer;
