@@ -16,6 +16,9 @@ import Wallet from "./pages/Wallet";
 import History from "./pages/History";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import ProductDemo from "./pages/ProductDemo";
+import Investors from "./pages/Investors";
+import Team from "./pages/Team";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +33,9 @@ const App = () => (
             {/* Public Routes */}
             <Route path="/" element={<Index />} />
             <Route path="/packages" element={<Packages />} />
+            <Route path="/demo" element={<ProductDemo />} />
+            <Route path="/investors" element={<Investors />} />
+            <Route path="/team" element={<Team />} />
             <Route path="/register" element={<Register />} />
             <Route path="/login" element={<Login />} />
             <Route path="/faq" element={<FAQ />} />

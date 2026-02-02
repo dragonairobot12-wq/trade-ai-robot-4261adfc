@@ -1,7 +1,7 @@
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { HelpCircle } from "lucide-react";
+import { HelpCircle, AlertTriangle } from "lucide-react";
 
 const faqs = [
   {
@@ -46,6 +46,25 @@ const faqs = [
   },
 ];
 
+const investorDisclosures = [
+  {
+    question: "Is this financial advice?",
+    answer: "No. WealthAI does not provide personalized financial advice. All information provided is for informational purposes only. You should consult with a qualified financial advisor before making any investment decisions.",
+  },
+  {
+    question: "What are the risks of investing?",
+    answer: "All investments carry risk, including the potential loss of principal. Trading in financial markets involves substantial risk and is not suitable for all investors. You should only invest money you can afford to lose.",
+  },
+  {
+    question: "Is past performance indicative of future results?",
+    answer: "No. Past performance, whether real or simulated, does not guarantee future results. Market conditions change, and historical returns cannot predict future performance.",
+  },
+  {
+    question: "What is simulated vs. live performance?",
+    answer: "Simulated (backtested) performance is based on applying our algorithms to historical data. It does not represent actual trading results. Live performance refers to real trades executed in real market conditions. We clearly label all performance data as either 'simulated/backtested' or 'live verified'.",
+  },
+];
+
 const FAQ = () => {
   return (
     <div className="min-h-screen">
@@ -80,6 +99,30 @@ const FAQ = () => {
                   </AccordionTrigger>
                   <AccordionContent className="text-muted-foreground pb-5">
                     {faq.answer}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </div>
+
+          {/* Investor Disclosures Section */}
+          <div className="max-w-3xl mx-auto mt-16">
+            <div className="flex items-center gap-3 mb-6">
+              <AlertTriangle className="w-5 h-5 text-warning" />
+              <h2 className="text-2xl font-bold">Investor Disclosures</h2>
+            </div>
+            <Accordion type="single" collapsible className="space-y-4">
+              {investorDisclosures.map((disclosure, index) => (
+                <AccordionItem
+                  key={`disclosure-${index}`}
+                  value={`disclosure-${index}`}
+                  className="bg-card border border-warning/30 rounded-xl px-6 data-[state=open]:shadow-md transition-shadow"
+                >
+                  <AccordionTrigger className="text-left hover:no-underline py-5">
+                    <span className="font-semibold">{disclosure.question}</span>
+                  </AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground pb-5">
+                    {disclosure.answer}
                   </AccordionContent>
                 </AccordionItem>
               ))}
