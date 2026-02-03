@@ -11,10 +11,10 @@ const Footer = () => {
               <div className="w-10 h-10 gradient-primary rounded-xl flex items-center justify-center">
                 <TrendingUp className="w-6 h-6 text-primary-foreground" />
               </div>
-              <span className="text-xl font-bold">WealthAI</span>
+              <span className="text-xl font-bold">Dragon AI Robot</span>
             </Link>
             <p className="text-sm text-muted-foreground max-w-xs">
-              Harness the power of artificial intelligence to grow your wealth with our cutting-edge trading algorithms.
+              The world's most powerful automated trading ecosystem powered by advanced AI algorithms.
             </p>
           </div>
 
@@ -48,7 +48,7 @@ const Footer = () => {
             <ul className="space-y-3">
               <li className="flex items-center gap-3 text-sm text-muted-foreground">
                 <Mail className="w-4 h-4" />
-                support@wealthai.com
+                support@dragonairobot.com
               </li>
               
               <li className="flex items-start gap-3 text-sm text-muted-foreground">
@@ -61,7 +61,7 @@ const Footer = () => {
 
         <div className="border-t border-border/50 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} WealthAI. All rights reserved.
+            © {new Date().getFullYear()} Dragon AI Robot. All rights reserved.
           </p>
           <p className="text-xs text-muted-foreground max-w-md text-center md:text-right">
             Trading involves risk. Past performance is not indicative of future results.

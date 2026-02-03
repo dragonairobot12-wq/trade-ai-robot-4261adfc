@@ -192,10 +192,10 @@ const SplashScreen = ({ onComplete, minDuration = 3000 }: SplashScreenProps) => 
             >
               <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
                 <span className="bg-gradient-to-r from-white via-white to-emerald-200 bg-clip-text text-transparent">
-                  Trade
+                  Dragon
                 </span>
                 <span className="bg-gradient-to-r from-emerald-400 to-emerald-500 bg-clip-text text-transparent">
-                  AI
+                  {" "}AI Robot
                 </span>
               </h1>
               <motion.p
@@ -204,7 +204,7 @@ const SplashScreen = ({ onComplete, minDuration = 3000 }: SplashScreenProps) => 
                 transition={{ delay: 0.8, duration: 0.6 }}
                 className="text-center text-sm text-muted-foreground mt-2 tracking-widest uppercase"
               >
-                Intelligent Trading Platform
+                Advanced AI Trading Solutions
               </motion.p>
             </motion.div>
 

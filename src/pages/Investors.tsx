@@ -26,7 +26,7 @@ const sections = [
     id: "solution",
     icon: Lightbulb,
     title: "Our Solution",
-    content: "WealthAI provides an accessible, transparent AI trading platform with built-in risk management, position sizing, and comprehensive audit logging. We democratize institutional-grade trading technology."
+    content: "Dragon AI Robot provides an accessible, transparent AI trading platform with built-in risk management, position sizing, and comprehensive audit logging. We democratize institutional-grade trading technology."
   },
   {
     id: "product",

@@ -61,7 +61,7 @@ const TopBar = ({ onMenuClick }: TopBarProps) => {
             <div className="w-8 h-8 gradient-primary rounded-lg flex items-center justify-center">
               <Bot className="w-4 h-4 text-primary-foreground" />
             </div>
-            <span className="font-bold text-gradient">AIWealth</span>
+            <span className="font-bold text-gradient">Dragon AI</span>
           </Link>
 
           {/* Search - Desktop */}

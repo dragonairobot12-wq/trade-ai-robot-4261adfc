@@ -45,7 +45,7 @@ const AppSidebar = ({ collapsed = false, onCollapse }: AppSidebarProps) => {
           </div>
           {!collapsed && (
             <span className="font-bold text-lg text-sidebar-foreground">
-              AI<span className="text-gradient">Wealth</span>
+              Dragon<span className="text-gradient">AI</span>
             </span>
           )}
         </Link>

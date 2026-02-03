@@ -168,7 +168,7 @@ const ForgotPasswordModal = ({ isOpen, onClose }: ForgotPasswordModalProps) => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.4 }}
                   >
-                    For security reasons, password resets are handled manually by our security team. 
+                    For security reasons, password resets are handled manually by the Dragon AI Support Team. 
                     Please contact our official support on Telegram to verify your identity and restore access.
                   </motion.p>
 
