@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,21 +7,36 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import SplashScreen from "@/components/SplashScreen";
-import Index from "./pages/Index";
-import Packages from "./pages/Packages";
-import Dashboard from "./pages/Dashboard";
-import Auth from "./pages/Auth";
-import FAQ from "./pages/FAQ";
-import Contact from "./pages/Contact";
-import Wallet from "./pages/Wallet";
-import History from "./pages/History";
-import Settings from "./pages/Settings";
-import NotFound from "./pages/NotFound";
-import ProductDemo from "./pages/ProductDemo";
-import Investors from "./pages/Investors";
-import Team from "./pages/Team";
+import ErrorBoundary from "@/components/ErrorBoundary";
+import PageLoader from "@/components/PageLoader";
 
-const queryClient = new QueryClient();
+// Eagerly loaded pages (frequently accessed)
+import Index from "./pages/Index";
+import Auth from "./pages/Auth";
+import NotFound from "./pages/NotFound";
+
+// Lazy loaded pages for bundle optimization
+const Packages = lazy(() => import("./pages/Packages"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const FAQ = lazy(() => import("./pages/FAQ"));
+const Contact = lazy(() => import("./pages/Contact"));
+const Wallet = lazy(() => import("./pages/Wallet"));
+const History = lazy(() => import("./pages/History"));
+const Settings = lazy(() => import("./pages/Settings"));
+const ProductDemo = lazy(() => import("./pages/ProductDemo"));
+const Investors = lazy(() => import("./pages/Investors"));
+const Team = lazy(() => import("./pages/Team"));
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes default
+      gcTime: 10 * 60 * 1000, // 10 minutes cache retention
+      retry: 2,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App = () => {
   const [showSplash, setShowSplash] = useState(true);
@@ -43,72 +58,76 @@ const App = () => {
   };
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          
-          {/* Splash Screen */}
-          {showSplash && !hasSeenSplash && (
-            <SplashScreen onComplete={handleSplashComplete} minDuration={3000} />
-          )}
-          
-          <BrowserRouter>
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/" element={<Index />} />
-              <Route path="/packages" element={<Packages />} />
-              <Route path="/demo" element={<ProductDemo />} />
-              <Route path="/investors" element={<Investors />} />
-              <Route path="/team" element={<Team />} />
-              <Route path="/register" element={<Auth />} />
-              <Route path="/login" element={<Auth />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/faq" element={<FAQ />} />
-              <Route path="/contact" element={<Contact />} />
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            
+            {/* Splash Screen */}
+            {showSplash && !hasSeenSplash && (
+              <SplashScreen onComplete={handleSplashComplete} minDuration={3000} />
+            )}
+            
+            <BrowserRouter>
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
+                  {/* Public Routes */}
+                  <Route path="/" element={<Index />} />
+                  <Route path="/packages" element={<Packages />} />
+                  <Route path="/demo" element={<ProductDemo />} />
+                  <Route path="/investors" element={<Investors />} />
+                  <Route path="/team" element={<Team />} />
+                  <Route path="/register" element={<Auth />} />
+                  <Route path="/login" element={<Auth />} />
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/faq" element={<FAQ />} />
+                  <Route path="/contact" element={<Contact />} />
 
-              {/* Protected Routes */}
-              <Route
-                path="/dashboard"
-                element={
-                  <ProtectedRoute>
-                    <Dashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/wallet"
-                element={
-                  <ProtectedRoute>
-                    <Wallet />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/history"
-                element={
-                  <ProtectedRoute>
-                    <History />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/settings"
-                element={
-                  <ProtectedRoute>
-                    <Settings />
-                  </ProtectedRoute>
-                }
-              />
+                  {/* Protected Routes */}
+                  <Route
+                    path="/dashboard"
+                    element={
+                      <ProtectedRoute>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/wallet"
+                    element={
+                      <ProtectedRoute>
+                        <Wallet />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/history"
+                    element={
+                      <ProtectedRoute>
+                        <History />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/settings"
+                    element={
+                      <ProtectedRoute>
+                        <Settings />
+                      </ProtectedRoute>
+                    }
+                  />
 
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Suspense>
+            </BrowserRouter>
+          </TooltipProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 };
 

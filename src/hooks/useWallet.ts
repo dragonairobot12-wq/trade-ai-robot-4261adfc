@@ -46,7 +46,7 @@ export const useWallet = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch wallet data
+  // Fetch wallet data with 5-minute cache
   const { data: wallet, isLoading: walletLoading } = useQuery({
     queryKey: ["wallet", user?.id],
     queryFn: async () => {
@@ -62,9 +62,11 @@ export const useWallet = () => {
       return data as WalletData;
     },
     enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
   });
 
-  // Fetch deposits
+  // Fetch deposits with 5-minute cache
   const { data: deposits = [], isLoading: depositsLoading } = useQuery({
     queryKey: ["deposits", user?.id],
     queryFn: async () => {
@@ -80,9 +82,11 @@ export const useWallet = () => {
       return data as DepositData[];
     },
     enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
-  // Fetch withdrawals
+  // Fetch withdrawals with 5-minute cache
   const { data: withdrawals = [], isLoading: withdrawalsLoading } = useQuery({
     queryKey: ["withdrawals", user?.id],
     queryFn: async () => {
@@ -98,6 +102,8 @@ export const useWallet = () => {
       return data as WithdrawalData[];
     },
     enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
   // Create deposit request

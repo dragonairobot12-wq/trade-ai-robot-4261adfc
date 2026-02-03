@@ -4,7 +4,7 @@ import StatCard from "@/components/dashboard/StatCard";
 import AIStatusWidget from "@/components/dashboard/AIStatusWidget";
 import PerformanceChart from "@/components/dashboard/PerformanceChart";
 import ActiveInvestments from "@/components/dashboard/ActiveInvestments";
-import RecentTransactions from "@/components/dashboard/RecentTransactions";
+import PaginatedTransactions from "@/components/dashboard/PaginatedTransactions";
 import TradingViewChart from "@/components/dashboard/TradingViewChart";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWallet } from "@/hooks/useWallet";
@@ -111,7 +111,7 @@ const Dashboard = () => {
         {/* Secondary Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <ActiveInvestments />
-          <RecentTransactions />
+          <PaginatedTransactions />
         </div>
       </div>
     </AppLayout>
