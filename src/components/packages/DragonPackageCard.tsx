@@ -53,7 +53,9 @@ interface DragonPackageCardProps {
   tierIndex: number;
   onInvest?: (packageId: string, amount: number) => void;
   isInvesting?: boolean;
-  layout?: "desktop" | "tablet" | "mobile";
+  layout?: "desktop" | "tablet" | "mobile" | "carousel";
+  isActive?: boolean;
+  scrollProgress?: number;
 }
 
 const riskColors = {
@@ -107,6 +109,8 @@ const DragonPackageCard = ({
   onInvest,
   isInvesting,
   layout = "desktop",
+  isActive = false,
+  scrollProgress = 0,
 }: DragonPackageCardProps) => {
   const [showConfirm, setShowConfirm] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -122,8 +126,13 @@ const DragonPackageCard = ({
   const tierGlow = tierGlowColors[tierIndex] || tierGlowColors[0];
   const tierBorder = tierBorderColors[tierIndex] || tierBorderColors[0];
 
+  // Calculate parallax offset based on scroll progress for carousel
+  const parallaxOffset = layout === "carousel" 
+    ? (scrollProgress - (tierIndex / 10)) * 30 
+    : 0;
+
   const handleMouseMove = (e: MouseEvent<HTMLDivElement>) => {
-    if (!cardRef.current || layout === "mobile") return;
+    if (!cardRef.current || layout === "mobile" || layout === "carousel") return;
     const rect = cardRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
@@ -157,7 +166,181 @@ const DragonPackageCard = ({
     setShowConfirm(false);
   };
 
-  // Mobile compact layout
+  // Mobile Carousel Card Layout
+  if (layout === "carousel") {
+    return (
+      <>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ 
+            opacity: 1, 
+            scale: isActive ? 1 : 0.95,
+          }}
+          transition={{ 
+            duration: 0.4, 
+            type: "spring",
+            stiffness: 100,
+            damping: 20
+          }}
+          className="h-full"
+        >
+          <div
+            className={`
+              relative h-full p-4 rounded-2xl border backdrop-blur-xl bg-card/70
+              transition-all duration-300 ${tierBorder}
+              ${vip ? 'shadow-xl shadow-primary/15' : 'shadow-lg'}
+              ${isActive ? 'border-opacity-100' : 'border-opacity-50'}
+            `}
+          >
+            {/* Glow effect */}
+            <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${tierGlow} opacity-40 pointer-events-none transition-opacity duration-300 ${isActive ? 'opacity-50' : 'opacity-30'}`} />
+            
+            {/* VIP/Popular badge */}
+            {(popular || vip) && (
+              <Badge 
+                className={`
+                  absolute -top-2 left-4 z-10
+                  ${vip 
+                    ? "gradient-primary text-primary-foreground shadow-lg shadow-primary/30" 
+                    : "bg-chart-3 text-primary-foreground"
+                  } 
+                  px-2 py-0.5 text-[10px] font-semibold
+                `}
+              >
+                {vip ? <><Star className="w-3 h-3 mr-1" />DRAGON MASTER</> : "Popular"}
+              </Badge>
+            )}
+
+            {/* Wait Period Badge */}
+            <Badge 
+              variant="outline"
+              className="absolute top-3 left-3 bg-background/70 backdrop-blur-sm text-[10px] py-0.5 px-2 border-primary/20"
+            >
+              <Timer className="w-3 h-3 mr-1" />
+              {waitPeriod}d Lock
+            </Badge>
+
+            {/* Dragon Icon with Parallax Effect */}
+            <motion.div 
+              className="absolute -top-6 right-4 w-20 h-20"
+              animate={{
+                x: parallaxOffset,
+                rotate: parallaxOffset * 0.5,
+              }}
+              transition={{ type: "spring", stiffness: 150, damping: 20 }}
+            >
+              <img 
+                src={dragonIcon} 
+                alt={name}
+                className="w-full h-full object-contain drop-shadow-2xl"
+              />
+            </motion.div>
+
+            <div className="relative z-10 pt-12">
+              {/* Header */}
+              <div className="text-center mb-3">
+                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-widest mb-1">
+                  {name}
+                </p>
+                <div className="flex items-baseline justify-center gap-1">
+                  <span className="text-sm text-muted-foreground">$</span>
+                  <span className={`text-4xl font-bold ${vip ? 'text-gradient' : 'text-foreground'}`}>
+                    {amount.toLocaleString()}
+                  </span>
+                </div>
+              </div>
+
+              {/* Stats Grid */}
+              <div className="grid grid-cols-3 gap-2 mb-3">
+                <div className="text-center p-2.5 rounded-xl border border-border/30 bg-secondary/40 backdrop-blur-sm">
+                  <TrendingUp className="w-4 h-4 mx-auto mb-1 text-success" />
+                  <div className="text-sm font-bold text-success">{roi}</div>
+                  <div className="text-[9px] text-muted-foreground uppercase">ROI</div>
+                </div>
+                <div className="text-center p-2.5 rounded-xl border border-border/30 bg-secondary/40 backdrop-blur-sm">
+                  <Clock className="w-4 h-4 mx-auto mb-1 text-primary" />
+                  <div className="text-sm font-bold">{durationDays}d</div>
+                  <div className="text-[9px] text-muted-foreground uppercase">Active</div>
+                </div>
+                <div className="text-center p-2.5 rounded-xl border border-border/30 bg-secondary/40 backdrop-blur-sm">
+                  <Shield className="w-4 h-4 mx-auto mb-1 text-chart-3" />
+                  <div className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full border ${riskColors[riskLevel]}`}>
+                    {riskLevel}
+                  </div>
+                </div>
+              </div>
+
+              {/* AI Strategy */}
+              <div className="p-3 rounded-xl mb-3 border bg-gradient-to-br from-secondary/50 to-secondary/20 border-border/20">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <Zap className="w-3.5 h-3.5 text-primary" />
+                  <span className="text-[10px] font-semibold">AI Strategy</span>
+                </div>
+                <p className="text-[10px] text-muted-foreground line-clamp-2">{strategy}</p>
+              </div>
+
+              {/* Features */}
+              <ul className="space-y-1.5 mb-4">
+                {features.slice(0, 4).map((feature, index) => (
+                  <li key={index} className="flex items-center gap-2 text-[10px]">
+                    <div className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 bg-success/15">
+                      <Check className="w-2.5 h-2.5 text-success" />
+                    </div>
+                    <span className="text-muted-foreground">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+
+              {/* CTA Button - Wide and thumb-friendly */}
+              <Button
+                className={`
+                  w-full h-12 text-sm font-semibold relative overflow-hidden
+                  ${vip 
+                    ? 'gradient-primary text-primary-foreground shadow-lg shadow-primary/30' 
+                    : 'bg-gradient-to-r from-primary to-chart-3 text-primary-foreground'
+                  }
+                `}
+                onClick={handleInvestClick}
+                disabled={isInvesting}
+              >
+                {isInvesting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <Zap className="w-4 h-4 mr-2" />
+                    Activate Dragon Node
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Confirmation Dialog */}
+        <ConfirmDialog 
+          open={showConfirm}
+          onOpenChange={setShowConfirm}
+          dragonIcon={dragonIcon}
+          name={name}
+          amount={amount}
+          waitPeriod={waitPeriod}
+          roi={roi}
+          durationDays={durationDays}
+          expectedReturn={expectedReturn}
+          hasInsufficientBalance={hasInsufficientBalance}
+          wallet={wallet}
+          isInvesting={isInvesting}
+          onConfirm={handleConfirmInvest}
+          onGoToWallet={() => { setShowConfirm(false); navigate("/wallet"); }}
+        />
+      </>
+    );
+  }
+
+  // Mobile compact layout (kept for backwards compatibility)
   if (layout === "mobile") {
     return (
       <>

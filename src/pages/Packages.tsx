@@ -1,3 +1,4 @@
+import { useRef, useState, useEffect } from "react";
 import AppLayout from "@/components/layout/AppLayout";
 import DragonPackageCard from "@/components/packages/DragonPackageCard";
 import { useInvestments } from "@/hooks/useInvestments";
@@ -45,49 +46,65 @@ const mapRiskLevel = (risk: string): "Low" | "Medium" | "Medium-High" | "High" =
 };
 
 const LoadingSkeleton = ({ isMobile = false }: { isMobile?: boolean }) => (
-  <div className={`relative ${isMobile ? 'p-3' : 'p-4'} bg-card/50 backdrop-blur-xl rounded-2xl border border-border/30 overflow-hidden ${isMobile ? 'h-[160px]' : 'h-[340px]'}`}>
+  <div className={`relative ${isMobile ? 'p-4 min-w-[80vw]' : 'p-4'} bg-card/50 backdrop-blur-xl rounded-2xl border border-border/30 overflow-hidden ${isMobile ? 'h-[420px]' : 'h-[340px]'}`}>
     <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-secondary/30 to-transparent" />
-    {isMobile ? (
-      <div className="flex items-center gap-3 h-full">
-        <Skeleton className="w-14 h-14 rounded-xl flex-shrink-0" />
-        <div className="flex-1 space-y-2">
-          <Skeleton className="h-4 w-24" />
-          <Skeleton className="h-6 w-16" />
-          <div className="flex gap-2">
-            <Skeleton className="h-5 w-14 rounded-full" />
-            <Skeleton className="h-5 w-14 rounded-full" />
-          </div>
-        </div>
-        <Skeleton className="w-24 h-10 rounded-lg flex-shrink-0" />
+    <div className="pt-10 space-y-3">
+      <div className="absolute -top-4 right-3">
+        <Skeleton className="w-16 h-16 rounded-full" />
       </div>
-    ) : (
-      <div className="pt-10 space-y-3">
-        <div className="absolute -top-4 right-3">
-          <Skeleton className="w-14 h-14 rounded-full" />
-        </div>
-        <div className="text-center">
-          <Skeleton className="h-3 w-20 mx-auto mb-2" />
-          <Skeleton className="h-8 w-24 mx-auto" />
-        </div>
-        <div className="grid grid-cols-3 gap-1.5">
-          <Skeleton className="h-14 rounded-lg" />
-          <Skeleton className="h-14 rounded-lg" />
-          <Skeleton className="h-14 rounded-lg" />
-        </div>
-        <Skeleton className="h-14 rounded-lg" />
-        <div className="space-y-1.5">
-          <Skeleton className="h-2.5 w-full" />
-          <Skeleton className="h-2.5 w-5/6" />
-          <Skeleton className="h-2.5 w-4/5" />
-        </div>
-        <Skeleton className="h-9 w-full rounded-lg" />
+      <div className="text-center">
+        <Skeleton className="h-3 w-20 mx-auto mb-2" />
+        <Skeleton className="h-8 w-24 mx-auto" />
       </div>
-    )}
+      <div className="grid grid-cols-3 gap-1.5">
+        <Skeleton className="h-16 rounded-lg" />
+        <Skeleton className="h-16 rounded-lg" />
+        <Skeleton className="h-16 rounded-lg" />
+      </div>
+      <Skeleton className="h-16 rounded-lg" />
+      <div className="space-y-1.5">
+        <Skeleton className="h-2.5 w-full" />
+        <Skeleton className="h-2.5 w-5/6" />
+        <Skeleton className="h-2.5 w-4/5" />
+      </div>
+      <Skeleton className="h-10 w-full rounded-lg" />
+    </div>
+  </div>
+);
+
+// Scroll Progress Indicator Component
+const ScrollProgressIndicator = ({ 
+  total, 
+  current 
+}: { 
+  total: number; 
+  current: number;
+}) => (
+  <div className="flex items-center justify-center gap-1.5 py-4">
+    {Array.from({ length: total }).map((_, index) => (
+      <motion.div
+        key={index}
+        className={`rounded-full transition-all duration-300 ${
+          index === current 
+            ? 'bg-primary w-6 h-2' 
+            : 'bg-muted-foreground/30 w-2 h-2'
+        }`}
+        initial={false}
+        animate={{
+          scale: index === current ? 1 : 0.8,
+          opacity: index === current ? 1 : 0.5,
+        }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      />
+    ))}
   </div>
 );
 
 const Packages = () => {
   const { packages, createInvestment, isLoading } = useInvestments();
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [scrollProgress, setScrollProgress] = useState(0);
 
   const handleInvest = (packageId: string, amount: number) => {
     createInvestment.mutate({ packageId, amount });
@@ -96,20 +113,37 @@ const Packages = () => {
   // Sort packages by price
   const sortedPackages = [...(packages || [])].sort((a, b) => a.price - b.price);
 
+  // Handle scroll to update current index
+  useEffect(() => {
+    const carousel = carouselRef.current;
+    if (!carousel) return;
+
+    const handleScroll = () => {
+      const scrollLeft = carousel.scrollLeft;
+      const cardWidth = carousel.offsetWidth * 0.8 + 16; // 80vw + gap
+      const index = Math.round(scrollLeft / cardWidth);
+      setCurrentIndex(Math.min(index, sortedPackages.length - 1));
+      
+      // Calculate scroll progress (0-1)
+      const maxScroll = carousel.scrollWidth - carousel.offsetWidth;
+      setScrollProgress(maxScroll > 0 ? scrollLeft / maxScroll : 0);
+    };
+
+    carousel.addEventListener('scroll', handleScroll, { passive: true });
+    return () => carousel.removeEventListener('scroll', handleScroll);
+  }, [sortedPackages.length]);
+
   return (
     <AppLayout>
       <div className="relative min-h-screen">
         {/* Ambient Light Background */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {/* Primary ambient orb */}
           <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-gradient-to-br from-primary/10 via-chart-3/5 to-transparent blur-[120px] animate-pulse" />
-          {/* Secondary ambient orb */}
           <div className="absolute bottom-1/3 left-1/4 w-[400px] h-[400px] rounded-full bg-gradient-to-tr from-chart-3/10 via-primary/5 to-transparent blur-[100px]" />
-          {/* Tertiary accent orb */}
           <div className="absolute top-1/2 right-1/4 w-[300px] h-[300px] rounded-full bg-gradient-to-bl from-success/8 to-transparent blur-[80px]" />
         </div>
 
-        <div className="relative z-10 p-4 lg:p-6 space-y-6 max-w-[1400px] mx-auto">
+        <div className="relative z-10 p-4 lg:p-6 space-y-4 lg:space-y-6 max-w-[1400px] mx-auto">
           {/* Header */}
           <motion.div 
             initial={{ opacity: 0, y: -20 }}
@@ -229,42 +263,84 @@ const Packages = () => {
             )}
           </div>
 
-          {/* Mobile: 1-column Compact Cards */}
-          <div className="md:hidden space-y-3 pb-4">
-            {isLoading ? (
-              Array.from({ length: 5 }).map((_, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: index * 0.05 }}
-                >
-                  <LoadingSkeleton isMobile />
-                </motion.div>
-              ))
-            ) : (
-              sortedPackages.map((pkg, index) => (
-                <DragonPackageCard
-                  key={pkg.id}
-                  id={pkg.id}
-                  amount={pkg.price}
-                  name={pkg.name}
-                  roi={`${pkg.roi}%`}
-                  duration={`${pkg.duration_days} days`}
-                  durationDays={pkg.duration_days}
-                  waitPeriod={getWaitPeriod()}
-                  riskLevel={mapRiskLevel(pkg.risk_level)}
-                  strategy={pkg.ai_strategy || pkg.description || "AI-powered trading strategy"}
-                  features={getPackageFeatures(pkg.price)}
-                  popular={index === 4}
-                  vip={index === sortedPackages.length - 1}
-                  tierIndex={index}
-                  onInvest={handleInvest}
-                  isInvesting={createInvestment.isPending}
-                  layout="mobile"
+          {/* Mobile: Horizontal Swipeable Carousel */}
+          <div className="md:hidden -mx-4">
+            {/* Scroll Progress Bar */}
+            <div className="px-4 mb-2">
+              <div className="h-1 bg-muted/30 rounded-full overflow-hidden">
+                <motion.div 
+                  className="h-full bg-gradient-to-r from-primary to-chart-3 rounded-full"
+                  style={{ width: `${10 + scrollProgress * 90}%` }}
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 />
-              ))
-            )}
+              </div>
+            </div>
+
+            {/* Carousel Container */}
+            <div 
+              ref={carouselRef}
+              className="flex gap-4 overflow-x-auto px-4 pb-2 carousel-scroll-snap"
+              style={{
+                scrollSnapType: 'x mandatory',
+                scrollBehavior: 'smooth',
+                WebkitOverflowScrolling: 'touch',
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none',
+              }}
+            >
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, index) => (
+                  <div 
+                    key={index} 
+                    className="flex-shrink-0"
+                    style={{ 
+                      width: '80vw',
+                      scrollSnapAlign: 'center',
+                    }}
+                  >
+                    <LoadingSkeleton isMobile />
+                  </div>
+                ))
+              ) : (
+                sortedPackages.map((pkg, index) => (
+                  <div 
+                    key={pkg.id}
+                    className="flex-shrink-0"
+                    style={{ 
+                      width: '80vw',
+                      scrollSnapAlign: 'center',
+                    }}
+                  >
+                    <DragonPackageCard
+                      id={pkg.id}
+                      amount={pkg.price}
+                      name={pkg.name}
+                      roi={`${pkg.roi}%`}
+                      duration={`${pkg.duration_days} days`}
+                      durationDays={pkg.duration_days}
+                      waitPeriod={getWaitPeriod()}
+                      riskLevel={mapRiskLevel(pkg.risk_level)}
+                      strategy={pkg.ai_strategy || pkg.description || "AI-powered trading strategy"}
+                      features={getPackageFeatures(pkg.price)}
+                      popular={index === 4}
+                      vip={index === sortedPackages.length - 1}
+                      tierIndex={index}
+                      onInvest={handleInvest}
+                      isInvesting={createInvestment.isPending}
+                      layout="carousel"
+                      isActive={index === currentIndex}
+                      scrollProgress={scrollProgress}
+                    />
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Dot Indicators */}
+            <ScrollProgressIndicator 
+              total={sortedPackages.length} 
+              current={currentIndex} 
+            />
           </div>
 
           {/* Trust Indicators */}
@@ -307,6 +383,13 @@ const Packages = () => {
           </motion.div>
         </div>
       </div>
+
+      {/* Hide scrollbar CSS */}
+      <style>{`
+        .carousel-scroll-snap::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
     </AppLayout>
   );
 };
