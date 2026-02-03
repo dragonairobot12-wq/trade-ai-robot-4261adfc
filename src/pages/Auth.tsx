@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import ForgotPasswordModal from "@/components/auth/ForgotPasswordModal";
 import { 
   Eye, 
   EyeOff, 
@@ -204,6 +205,7 @@ const Auth = () => {
   const [isSuccess, setIsSuccess] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   
   const [formData, setFormData] = useState({
     fullName: "",
@@ -382,6 +384,12 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen bg-[#050810] relative overflow-hidden flex items-center justify-center">
+      {/* Forgot Password Modal */}
+      <ForgotPasswordModal 
+        isOpen={showForgotPassword} 
+        onClose={() => setShowForgotPassword(false)} 
+      />
+
       {/* Animated Background Orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <AnimatedOrb 
@@ -571,6 +579,28 @@ const Auth = () => {
                     showPassword={showConfirmPassword}
                     onTogglePassword={() => setShowConfirmPassword(!showConfirmPassword)}
                   />
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Forgot Password Link (Login only) */}
+            <AnimatePresence>
+              {mode === "login" && (
+                <motion.div
+                  className="flex justify-end"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setShowForgotPassword(true)}
+                    className="text-sm text-emerald-400 hover:text-emerald-300 hover:underline transition-colors duration-200"
+                    disabled={isLoading}
+                  >
+                    Forgot Password?
+                  </button>
                 </motion.div>
               )}
             </AnimatePresence>
