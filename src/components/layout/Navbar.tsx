@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, TrendingUp, User } from "lucide-react";
+import { Menu, X } from "lucide-react";
+import dragonLogo from "@/assets/dragon-logo.png";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -24,8 +25,8 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 gradient-primary rounded-xl flex items-center justify-center shadow-glow">
-              <TrendingUp className="w-6 h-6 text-primary-foreground" />
+            <div className="w-10 h-10 rounded-xl overflow-hidden shadow-glow">
+              <img src={dragonLogo} alt="Dragon AI" className="w-full h-full object-cover" />
             </div>
             <span className="text-xl font-bold text-gradient">Dragon AI</span>
           </Link>
