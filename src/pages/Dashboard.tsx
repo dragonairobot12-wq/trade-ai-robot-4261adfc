@@ -5,6 +5,7 @@ import AIStatusWidget from "@/components/dashboard/AIStatusWidget";
 import PerformanceChart from "@/components/dashboard/PerformanceChart";
 import ActiveInvestments from "@/components/dashboard/ActiveInvestments";
 import RecentTransactions from "@/components/dashboard/RecentTransactions";
+import TradingViewChart from "@/components/dashboard/TradingViewChart";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWallet } from "@/hooks/useWallet";
 import { useProfile } from "@/hooks/useProfile";
@@ -90,6 +91,9 @@ const Dashboard = () => {
             </>
           )}
         </div>
+
+        {/* TradingView Chart - Hero Section */}
+        <TradingViewChart className="w-full" />
 
         {/* Main Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
