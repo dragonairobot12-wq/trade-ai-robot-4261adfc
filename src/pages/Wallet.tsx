@@ -10,27 +10,23 @@ import {
   Wallet as WalletIcon,
   ArrowUpRight,
   ArrowDownRight,
-  Bitcoin,
-  Copy,
   CheckCircle2,
   AlertCircle,
   Loader2,
   Clock,
-  Info,
+  Coins,
 } from "lucide-react";
+import USDTDepositHub from "@/components/wallet/USDTDepositHub";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useWallet } from "@/hooks/useWallet";
 import AnimatedCounter from "@/components/dashboard/AnimatedCounter";
 
-const DEPOSIT_WALLET_ADDRESS = "THNp5pr3xzN3HRhfi6PvwjfzPMkAVLaG1X";
+// Wallet addresses moved to USDTDepositHub component
 
 const Wallet = () => {
-  const [depositAmount, setDepositAmount] = useState("");
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [withdrawAddress, setWithdrawAddress] = useState("");
-  const [transactionHash, setTransactionHash] = useState("");
-  const [copied, setCopied] = useState(false);
   const { toast } = useToast();
   
   const { 
@@ -45,35 +41,6 @@ const Wallet = () => {
     calculateWithdrawalFee,
     WITHDRAWAL_FEE_PERCENTAGE,
   } = useWallet();
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(DEPOSIT_WALLET_ADDRESS);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-    toast({
-      title: "Address Copied",
-      description: "USDT-TRC20 wallet address copied to clipboard",
-    });
-  };
-
-  const handleDeposit = () => {
-    const amount = parseFloat(depositAmount);
-    if (isNaN(amount) || amount <= 0) {
-      toast({
-        title: "Invalid Amount",
-        description: "Please enter a valid deposit amount",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    createDeposit.mutate({ 
-      amount, 
-      transactionHash: transactionHash || undefined 
-    });
-    setDepositAmount("");
-    setTransactionHash("");
-  };
 
   const handleWithdraw = () => {
     const amount = parseFloat(withdrawAmount);
@@ -226,114 +193,7 @@ const Wallet = () => {
               </TabsList>
 
               <TabsContent value="deposit" className="space-y-6">
-                {/* Crypto Only Info */}
-                <div className="p-4 rounded-xl bg-primary/5 border border-primary/20">
-                  <div className="flex items-center gap-3 mb-3">
-                    <Bitcoin className="w-6 h-6 text-primary" />
-                    <div>
-                      <p className="font-semibold">Crypto Deposits Only</p>
-                      <p className="text-sm text-muted-foreground">We accept USDT (TRC20) deposits</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Wallet Address */}
-                <div className="p-4 rounded-xl bg-secondary/50 border border-border">
-                  <Label className="text-xs text-muted-foreground">USDT-TRC20 Deposit Address</Label>
-                  <div className="flex items-center gap-2 mt-2">
-                    <code className="flex-1 text-sm font-mono bg-background px-3 py-2 rounded-lg break-all">
-                      {DEPOSIT_WALLET_ADDRESS}
-                    </code>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={handleCopy}
-                      className="shrink-0"
-                    >
-                      {copied ? (
-                        <CheckCircle2 className="w-4 h-4 text-success" />
-                      ) : (
-                        <Copy className="w-4 h-4" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Amount Input */}
-                <div className="space-y-2">
-                  <Label>Deposit Amount (USD)</Label>
-                  <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-                    <Input
-                      type="number"
-                      placeholder="0.00"
-                      value={depositAmount}
-                      onChange={(e) => setDepositAmount(e.target.value)}
-                      className="pl-8 text-lg h-12"
-                      min="0"
-                    />
-                  </div>
-                  <div className="flex gap-2">
-                    {[100, 500, 1000, 5000].map((value) => (
-                      <Button
-                        key={value}
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setDepositAmount(value.toString())}
-                        className="flex-1"
-                      >
-                        ${value}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Transaction Hash (Optional) */}
-                <div className="space-y-2">
-                  <Label>Transaction Hash (Optional)</Label>
-                  <Input
-                    type="text"
-                    placeholder="Enter your TRC20 transaction hash"
-                    value={transactionHash}
-                    onChange={(e) => setTransactionHash(e.target.value)}
-                    className="h-12 font-mono text-sm"
-                  />
-                  <p className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Info className="w-3 h-3" />
-                    Providing the transaction hash speeds up verification
-                  </p>
-                </div>
-
-                {/* Important Notice */}
-                <div className="flex items-start gap-3 p-4 rounded-xl bg-warning/10 border border-warning/20">
-                  <AlertCircle className="w-5 h-5 text-warning shrink-0 mt-0.5" />
-                  <div className="text-sm">
-                    <p className="font-medium text-warning">Important</p>
-                    <p className="text-muted-foreground">
-                      Send only USDT on the TRC20 network. Deposits require admin approval and usually process within 1-24 hours.
-                    </p>
-                  </div>
-                </div>
-
-                <Button
-                  variant="gradient"
-                  size="lg"
-                  className="w-full"
-                  onClick={handleDeposit}
-                  disabled={!depositAmount || parseFloat(depositAmount) <= 0 || createDeposit.isPending}
-                >
-                  {createDeposit.isPending ? (
-                    <>
-                      <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                      Processing...
-                    </>
-                  ) : (
-                    <>
-                      <ArrowDownRight className="w-5 h-5 mr-2" />
-                      Submit Deposit Request
-                    </>
-                  )}
-                </Button>
+                <USDTDepositHub />
               </TabsContent>
 
               <TabsContent value="withdraw" className="space-y-6">
@@ -351,7 +211,7 @@ const Wallet = () => {
                 {/* Crypto Only Info */}
                 <div className="p-4 rounded-xl bg-primary/5 border border-primary/20">
                   <div className="flex items-center gap-3">
-                    <Bitcoin className="w-6 h-6 text-primary" />
+                    <Coins className="w-6 h-6 text-primary" />
                     <div>
                       <p className="font-semibold">Crypto Withdrawals Only</p>
                       <p className="text-sm text-muted-foreground">Withdrawals are processed via USDT (TRC20)</p>
