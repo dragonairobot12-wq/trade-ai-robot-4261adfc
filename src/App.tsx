@@ -10,8 +10,7 @@ import SplashScreen from "@/components/SplashScreen";
 import Index from "./pages/Index";
 import Packages from "./pages/Packages";
 import Dashboard from "./pages/Dashboard";
-import Register from "./pages/Register";
-import Login from "./pages/Login";
+import Auth from "./pages/Auth";
 import FAQ from "./pages/FAQ";
 import Contact from "./pages/Contact";
 import Wallet from "./pages/Wallet";
@@ -63,8 +62,9 @@ const App = () => {
               <Route path="/demo" element={<ProductDemo />} />
               <Route path="/investors" element={<Investors />} />
               <Route path="/team" element={<Team />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Auth />} />
+              <Route path="/login" element={<Auth />} />
+              <Route path="/auth" element={<Auth />} />
               <Route path="/faq" element={<FAQ />} />
               <Route path="/contact" element={<Contact />} />
 
