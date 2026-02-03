@@ -22,6 +22,7 @@ export type Database = {
           currency: string
           id: string
           network: string
+          screenshot_url: string | null
           status: string
           transaction_hash: string | null
           updated_at: string
@@ -35,6 +36,7 @@ export type Database = {
           currency?: string
           id?: string
           network?: string
+          screenshot_url?: string | null
           status?: string
           transaction_hash?: string | null
           updated_at?: string
@@ -48,6 +50,7 @@ export type Database = {
           currency?: string
           id?: string
           network?: string
+          screenshot_url?: string | null
           status?: string
           transaction_hash?: string | null
           updated_at?: string

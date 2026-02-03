@@ -1,10 +1,30 @@
-import { useState, useEffect } from "react";
+import { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { QRCodeSVG } from "qrcode.react";
-import { Copy, CheckCircle2, Shield, Zap, Scan, AlertTriangle } from "lucide-react";
+import { 
+  Copy, CheckCircle2, Shield, Zap, Scan, AlertTriangle, 
+  CloudUpload, FileCheck, Loader2, HelpCircle, X, Sparkles 
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 type NetworkType = "BEP20" | "TRC20";
 
@@ -39,22 +59,36 @@ const NETWORKS: Record<NetworkType, NetworkConfig> = {
 const STEPS = [
   { icon: Zap, title: "Select Network", description: "Choose BEP20 or TRC20" },
   { icon: Copy, title: "Transfer USDT", description: "Send to the address" },
-  { icon: Scan, title: "Auto-Verify", description: "System confirms deposit" },
+  { icon: Scan, title: "Submit Proof", description: "Upload payment proof" },
 ];
 
 const USDTDepositHub = () => {
   const [selectedNetwork, setSelectedNetwork] = useState<NetworkType>("BEP20");
   const [copied, setCopied] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
+  const [showProofForm, setShowProofForm] = useState(false);
+  
+  // Proof form state
+  const [txHash, setTxHash] = useState("");
+  const [amount, setAmount] = useState("");
+  const [screenshot, setScreenshot] = useState<File | null>(null);
+  const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const currentNetwork = NETWORKS[selectedNetwork];
+  
+  const isFormValid = txHash.trim().length > 0 && parseFloat(amount) > 0;
 
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(currentNetwork.address);
       setCopied(true);
-      setShowSuccess(true);
+      setShowProofForm(true);
       
       toast({
         title: "Address Copied!",
@@ -63,7 +97,6 @@ const USDTDepositHub = () => {
 
       setTimeout(() => {
         setCopied(false);
-        setShowSuccess(false);
       }, 2500);
     } catch (err) {
       toast({
@@ -71,6 +104,143 @@ const USDTDepositHub = () => {
         description: "Please manually copy the address",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleFileSelect = useCallback((file: File) => {
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: "File Too Large",
+        description: "Please upload an image smaller than 10MB",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Invalid File Type",
+        description: "Please upload an image file (PNG, JPG, etc.)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setScreenshot(file);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setScreenshotPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  }, [toast]);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      handleFileSelect(file);
+    }
+  }, [handleFileSelect]);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  }, []);
+
+  const removeScreenshot = () => {
+    setScreenshot(null);
+    setScreenshotPreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to submit a deposit",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!isFormValid) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      let screenshotUrl: string | null = null;
+
+      // Upload screenshot if provided
+      if (screenshot) {
+        const fileExt = screenshot.name.split('.').pop();
+        const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('deposit-proofs')
+          .upload(fileName, screenshot);
+
+        if (uploadError) {
+          console.error("Upload error:", uploadError);
+          // Continue without screenshot if upload fails
+        } else {
+          const { data: urlData } = supabase.storage
+            .from('deposit-proofs')
+            .getPublicUrl(fileName);
+          screenshotUrl = urlData.publicUrl;
+        }
+      }
+
+      // Insert deposit record
+      const { error: insertError } = await supabase
+        .from('deposits')
+        .insert({
+          user_id: user.id,
+          amount: parseFloat(amount),
+          transaction_hash: txHash.trim(),
+          network: selectedNetwork,
+          wallet_address: currentNetwork.address,
+          currency: 'USDT',
+          status: 'pending',
+          screenshot_url: screenshotUrl,
+        });
+
+      if (insertError) {
+        throw insertError;
+      }
+
+      // Reset form
+      setTxHash("");
+      setAmount("");
+      setScreenshot(null);
+      setScreenshotPreview(null);
+      setShowProofForm(false);
+      setShowSuccessModal(true);
+
+    } catch (error: any) {
+      console.error("Deposit submission error:", error);
+      toast({
+        title: "Submission Failed",
+        description: error.message || "Please try again later",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -279,6 +449,182 @@ const USDTDepositHub = () => {
         </motion.div>
       </AnimatePresence>
 
+      {/* Proof of Payment Form - Slides up after copy */}
+      <AnimatePresence>
+        {showProofForm && (
+          <motion.div
+            initial={{ opacity: 0, y: 40, height: 0 }}
+            animate={{ opacity: 1, y: 0, height: "auto" }}
+            exit={{ opacity: 0, y: 40, height: 0 }}
+            transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+            className="overflow-hidden"
+          >
+            <div className="relative rounded-2xl bg-card/60 border border-border/50 backdrop-blur-xl p-6 space-y-5">
+              {/* Form Header */}
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                  <FileCheck className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-base">Submit Payment Proof</h3>
+                  <p className="text-xs text-muted-foreground">Complete your deposit request</p>
+                </div>
+              </div>
+
+              {/* Transaction Hash Input */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="txHash" className="text-sm font-medium">
+                    Transaction ID / Hash
+                  </Label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <HelpCircle className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="max-w-[200px]">
+                        <p className="text-xs">Paste the unique transaction ID from your wallet here.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                <Input
+                  id="txHash"
+                  value={txHash}
+                  onChange={(e) => setTxHash(e.target.value)}
+                  placeholder="e.g., 0x8f7e3b..."
+                  className="h-12 font-mono text-sm bg-background/60 border-border/50"
+                />
+              </div>
+
+              {/* Amount Input */}
+              <div className="space-y-2">
+                <Label htmlFor="amount" className="text-sm font-medium">
+                  Amount Sent (USDT)
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="amount"
+                    type="number"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    placeholder="0.00"
+                    min="0"
+                    step="0.01"
+                    className="h-12 text-lg font-semibold bg-background/60 border-border/50 pr-16"
+                  />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">
+                    USDT
+                  </span>
+                </div>
+              </div>
+
+              {/* Screenshot Upload */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">
+                  Payment Screenshot <span className="text-muted-foreground font-normal">(Optional)</span>
+                </Label>
+                
+                {!screenshotPreview ? (
+                  <motion.div
+                    onDrop={handleDrop}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                    onClick={() => fileInputRef.current?.click()}
+                    className={cn(
+                      "relative cursor-pointer rounded-xl border-2 border-dashed transition-all duration-300",
+                      "flex flex-col items-center justify-center py-8 px-4",
+                      isDragOver 
+                        ? "border-primary bg-primary/5" 
+                        : "border-border/50 bg-background/40 hover:border-primary/50 hover:bg-background/60"
+                    )}
+                  >
+                    <CloudUpload className={cn(
+                      "w-10 h-10 mb-3 transition-colors",
+                      isDragOver ? "text-primary" : "text-muted-foreground"
+                    )} />
+                    <p className="text-sm font-medium text-foreground mb-1">
+                      {isDragOver ? "Drop your image here" : "Drag & drop or click to upload"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      PNG, JPG up to 10MB
+                    </p>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => e.target.files?.[0] && handleFileSelect(e.target.files[0])}
+                      className="hidden"
+                    />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="relative rounded-xl overflow-hidden border border-border/50"
+                  >
+                    <img 
+                      src={screenshotPreview} 
+                      alt="Payment proof" 
+                      className="w-full h-40 object-cover"
+                    />
+                    <button
+                      onClick={removeScreenshot}
+                      className="absolute top-2 right-2 p-1.5 rounded-full bg-destructive/90 text-destructive-foreground hover:bg-destructive transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                    <div className="absolute bottom-0 inset-x-0 p-2 bg-gradient-to-t from-background/90 to-transparent">
+                      <p className="text-xs text-foreground truncate">{screenshot?.name}</p>
+                    </div>
+                  </motion.div>
+                )}
+              </div>
+
+              {/* Network Confirmation Badge */}
+              <div className="flex items-center gap-2 p-3 rounded-xl bg-background/40 border border-border/30">
+                <span className="text-lg">{currentNetwork.icon}</span>
+                <div className="flex-1">
+                  <p className="text-xs text-muted-foreground">Selected Network</p>
+                  <p className="text-sm font-semibold">{currentNetwork.name} - {currentNetwork.fullName}</p>
+                </div>
+                <CheckCircle2 className="w-5 h-5 text-success" />
+              </div>
+
+              {/* Submit Button */}
+              <Button
+                onClick={handleSubmit}
+                disabled={!isFormValid || isSubmitting}
+                className={cn(
+                  "w-full h-14 rounded-xl font-bold text-base transition-all duration-300",
+                  "bg-gradient-to-r from-primary via-primary to-accent",
+                  "hover:opacity-90 hover:scale-[1.02] hover:shadow-lg",
+                  "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                )}
+              >
+                {isSubmitting ? (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="flex items-center gap-2"
+                  >
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>Processing Transaction...</span>
+                  </motion.div>
+                ) : (
+                  <motion.div className="flex items-center gap-2">
+                    <Sparkles className="w-5 h-5" />
+                    <span>Confirm Deposit</span>
+                  </motion.div>
+                )}
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Safety Alert */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -321,6 +667,35 @@ const USDTDepositHub = () => {
           <span>Instant Detection</span>
         </div>
       </motion.div>
+
+      {/* Success Modal */}
+      <Dialog open={showSuccessModal} onOpenChange={setShowSuccessModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader className="text-center">
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", bounce: 0.5, duration: 0.6 }}
+              className="mx-auto w-16 h-16 rounded-full bg-gradient-to-br from-success/20 to-success/5 flex items-center justify-center mb-4"
+            >
+              <CheckCircle2 className="w-8 h-8 text-success" />
+            </motion.div>
+            <DialogTitle className="text-xl font-bold">Deposit Request Submitted!</DialogTitle>
+            <DialogDescription className="text-muted-foreground pt-2">
+              Our team will verify your deposit within <span className="font-semibold text-foreground">10-30 minutes</span>. 
+              You'll be notified once confirmed.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-center pt-4">
+            <Button 
+              onClick={() => setShowSuccessModal(false)}
+              className="px-8"
+            >
+              Got it
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
