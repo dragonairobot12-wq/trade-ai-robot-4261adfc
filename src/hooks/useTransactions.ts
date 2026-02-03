@@ -16,6 +16,7 @@ export interface TransactionData {
 export const useTransactions = (limit?: number) => {
   const { user } = useAuth();
 
+  // Fetch transactions with 5-minute cache
   const { data: transactions = [], isLoading } = useQuery({
     queryKey: ["transactions", user?.id, limit],
     queryFn: async () => {
@@ -37,6 +38,8 @@ export const useTransactions = (limit?: number) => {
       return data as TransactionData[];
     },
     enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
   });
 
   return {
