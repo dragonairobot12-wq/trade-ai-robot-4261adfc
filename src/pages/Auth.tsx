@@ -352,7 +352,7 @@ const Auth = () => {
       setIsSuccess(true);
       toast({
         title: "Account Created! 🎉",
-        description: "Welcome to TradeAI! Redirecting to your dashboard...",
+        description: "Welcome to Dragon AI Robot! Redirecting to your dashboard...",
       });
     }
     
@@ -636,7 +636,7 @@ const Auth = () => {
               </div>
               <div className="relative flex justify-center text-sm">
                 <span className="bg-transparent px-4 text-muted-foreground backdrop-blur-xl">
-                  {mode === "login" ? "New to TradeAI?" : "Already have an account?"}
+                  {mode === "login" ? "New to Dragon AI Robot?" : "Already have an account?"}
                 </span>
               </div>
             </div>

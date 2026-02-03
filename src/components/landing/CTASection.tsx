@@ -22,7 +22,7 @@ const CTASection = () => {
           </h2>
 
           <p className="text-lg md:text-xl text-primary-foreground/80 max-w-2xl mx-auto">
-            Get our comprehensive investor deck or schedule a call to discuss how WealthAI fits your investment thesis.
+            Get our comprehensive investor deck or schedule a call to discuss how Dragon AI Robot fits your investment thesis.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">

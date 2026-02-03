@@ -5,7 +5,7 @@ import { HelpCircle, AlertTriangle } from "lucide-react";
 
 const faqs = [
   {
-    question: "How does WealthAI's trading algorithm work?",
+    question: "How does Dragon AI Robot's trading algorithm work?",
     answer: "Our AI trading system uses advanced machine learning algorithms that analyze market data, price patterns, and global economic indicators in real-time. The system makes thousands of micro-decisions per second to optimize your returns while managing risk according to your chosen investment package.",
   },
   {
@@ -49,7 +49,7 @@ const faqs = [
 const investorDisclosures = [
   {
     question: "Is this financial advice?",
-    answer: "No. WealthAI does not provide personalized financial advice. All information provided is for informational purposes only. You should consult with a qualified financial advisor before making any investment decisions.",
+    answer: "No. Dragon AI Robot does not provide personalized financial advice. All information provided is for informational purposes only. You should consult with a qualified financial advisor before making any investment decisions.",
   },
   {
     question: "What are the risks of investing?",

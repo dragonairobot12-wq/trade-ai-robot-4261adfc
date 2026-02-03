@@ -27,7 +27,7 @@ const Navbar = () => {
             <div className="w-10 h-10 gradient-primary rounded-xl flex items-center justify-center shadow-glow">
               <TrendingUp className="w-6 h-6 text-primary-foreground" />
             </div>
-            <span className="text-xl font-bold text-gradient">WealthAI</span>
+            <span className="text-xl font-bold text-gradient">Dragon AI</span>
           </Link>
 
           {/* Desktop Navigation */}
