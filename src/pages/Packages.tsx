@@ -5,109 +5,44 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { TrendingUp, Shield, Sparkles, Flame } from "lucide-react";
 import { motion } from "framer-motion";
 
-// Dragon AI Package Configuration
-const dragonPackages = [
-  {
-    price: 100,
-    name: "Emerald Egg",
-    roi: 12,
-    waitPeriod: 25,
-    durationDays: 60,
-    riskLevel: "Low" as const,
-    strategy: "Entry-level Dragon AI trading with conservative risk management and steady growth patterns.",
-    features: ["AI-powered trading", "Daily profit updates", "24/7 support", "Withdrawal anytime"],
-  },
-  {
-    price: 150,
-    name: "Sapphire Egg",
-    roi: 14,
-    waitPeriod: 25,
-    durationDays: 60,
-    riskLevel: "Low" as const,
-    strategy: "Enhanced Dragon algorithms with improved market analysis and optimized entry points.",
-    features: ["Smart entry detection", "Daily profit updates", "Priority support", "Auto-compound option"],
-  },
-  {
-    price: 200,
-    name: "Bronze Egg",
-    roi: 16,
-    waitPeriod: 25,
-    durationDays: 60,
-    riskLevel: "Low" as const,
-    strategy: "Balanced Dragon AI with multi-market scanning and dynamic position sizing.",
-    features: ["Multi-market analysis", "Real-time alerts", "Dedicated support", "Risk optimization"],
-  },
-  {
-    price: 300,
-    name: "Silver Drake Node",
-    roi: 18,
-    waitPeriod: 25,
-    durationDays: 60,
-    riskLevel: "Medium" as const,
-    strategy: "Young Drake AI unlocked for intermediate traders with enhanced pattern recognition.",
-    features: ["Advanced AI algorithms", "Portfolio insights", "VIP support", "Compound interest"],
-  },
-  {
-    price: 500,
-    name: "Golden Fire Protocol",
-    roi: 20,
-    waitPeriod: 25,
-    durationDays: 60,
-    riskLevel: "Medium" as const,
-    strategy: "Gold Drake engine with aggressive growth strategies and smart hedging mechanisms.",
-    features: ["Premium AI engine", "Real-time analytics", "Personal advisor", "Weekly reports"],
-  },
-  {
-    price: 1000,
-    name: "Platinum Flame",
-    roi: 22,
-    waitPeriod: 25,
-    durationDays: 90,
-    riskLevel: "Medium" as const,
-    strategy: "Platinum-tier Dragon AI with institutional-grade analysis and maximized efficiency.",
-    features: ["Institutional AI", "24/7 manager", "Custom strategies", "Insurance protection"],
-  },
-  {
-    price: 2000,
-    name: "Ruby Dragon Core",
-    roi: 25,
-    waitPeriod: 25,
-    durationDays: 90,
-    riskLevel: "Medium-High" as const,
-    strategy: "Ancient Ruby Dragon awakened for high-yield trading with advanced risk controls.",
-    features: ["Elite AI trading", "Personal manager", "Early access", "Bonus rewards"],
-  },
-  {
-    price: 3000,
-    name: "Obsidian Shadow",
-    roi: 28,
-    waitPeriod: 25,
-    durationDays: 90,
-    riskLevel: "Medium-High" as const,
-    strategy: "Obsidian Dragon protocol with dark pool access and stealth trading capabilities.",
-    features: ["Dark pool access", "Stealth trading", "Exclusive insights", "Priority withdrawals"],
-  },
-  {
-    price: 4000,
-    name: "Diamond Wyrm",
-    roi: 32,
-    waitPeriod: 25,
-    durationDays: 90,
-    riskLevel: "High" as const,
-    strategy: "Diamond Dragon engine with maximum AI power and multi-asset optimization.",
-    features: ["Maximum AI power", "Multi-asset trading", "1-on-1 consultations", "VIP events"],
-  },
-  {
-    price: 5000,
-    name: "Elder Dragon Master",
-    roi: 35,
-    waitPeriod: 25,
-    durationDays: 90,
-    riskLevel: "High" as const,
-    strategy: "The legendary Elder Dragon - ultimate AI power with exclusive access to premium markets.",
-    features: ["Legendary AI tier", "Private trading room", "Highest priority", "Exclusive VIP perks"],
-  },
-];
+// Get package features based on price tier
+const getPackageFeatures = (price: number): string[] => {
+  if (price <= 150) {
+    return ["AI-powered trading", "Daily profit updates", "24/7 support", "Withdrawal anytime"];
+  } else if (price <= 300) {
+    return ["Smart entry detection", "Multi-market analysis", "Priority support", "Risk optimization"];
+  } else if (price <= 500) {
+    return ["Advanced AI algorithms", "Portfolio insights", "VIP support", "Compound interest"];
+  } else if (price <= 1000) {
+    return ["Premium AI engine", "Real-time analytics", "Personal advisor", "Weekly reports"];
+  } else if (price <= 2000) {
+    return ["Institutional AI", "24/7 manager", "Custom strategies", "Insurance protection"];
+  } else if (price <= 3000) {
+    return ["Elite AI trading", "Personal manager", "Early access", "Bonus rewards"];
+  } else if (price <= 4000) {
+    return ["Dark pool access", "Stealth trading", "Exclusive insights", "Priority withdrawals"];
+  } else {
+    return ["Legendary AI tier", "Private trading room", "Highest priority", "Exclusive VIP perks"];
+  }
+};
+
+// Get wait period based on package (all packages use 25-day wait period)
+const getWaitPeriod = () => 25;
+
+// Map risk level from DB to display format
+const mapRiskLevel = (risk: string): "Low" | "Medium" | "Medium-High" | "High" => {
+  const riskMap: Record<string, "Low" | "Medium" | "Medium-High" | "High"> = {
+    "low": "Low",
+    "medium": "Medium",
+    "medium-high": "Medium-High",
+    "high": "High",
+    "Low": "Low",
+    "Medium": "Medium",
+    "Medium-High": "Medium-High",
+    "High": "High",
+  };
+  return riskMap[risk] || "Medium";
+};
 
 const LoadingSkeletonMobile = () => (
   <div className="relative p-4 bg-card rounded-2xl border border-border/50 overflow-hidden h-[380px]">
@@ -164,11 +99,14 @@ const LoadingSkeleton = () => (
 );
 
 const Packages = () => {
-  const { createInvestment, isLoading } = useInvestments();
+  const { packages, createInvestment, isLoading } = useInvestments();
 
   const handleInvest = (packageId: string, amount: number) => {
     createInvestment.mutate({ packageId, amount });
   };
+
+  // Sort packages by price
+  const sortedPackages = [...(packages || [])].sort((a, b) => a.price - b.price);
 
   return (
     <AppLayout>
@@ -211,7 +149,7 @@ const Packages = () => {
               <div className="w-8 h-8 rounded-lg bg-chart-3/10 flex items-center justify-center">
                 <Sparkles className="w-4 h-4 text-chart-3" />
               </div>
-              <span className="text-muted-foreground"><span className="font-semibold text-foreground">10</span> Dragon Tiers</span>
+              <span className="text-muted-foreground"><span className="font-semibold text-foreground">{sortedPackages.length}</span> Dragon Tiers</span>
             </div>
           </div>
         </motion.div>
@@ -223,21 +161,21 @@ const Packages = () => {
               <LoadingSkeleton key={index} />
             ))
           ) : (
-            dragonPackages.map((pkg, index) => (
+            sortedPackages.map((pkg, index) => (
               <DragonPackageCard
-                key={index}
-                id={`dragon-package-${index + 1}`}
+                key={pkg.id}
+                id={pkg.id}
                 amount={pkg.price}
                 name={pkg.name}
                 roi={`${pkg.roi}%`}
-                duration={`${pkg.durationDays} days`}
-                durationDays={pkg.durationDays}
-                waitPeriod={pkg.waitPeriod}
-                riskLevel={pkg.riskLevel}
-                strategy={pkg.strategy}
-                features={pkg.features}
+                duration={`${pkg.duration_days} days`}
+                durationDays={pkg.duration_days}
+                waitPeriod={getWaitPeriod()}
+                riskLevel={mapRiskLevel(pkg.risk_level)}
+                strategy={pkg.ai_strategy || pkg.description || "AI-powered trading strategy"}
+                features={getPackageFeatures(pkg.price)}
                 popular={index === 4}
-                vip={index === 9}
+                vip={index === sortedPackages.length - 1}
                 tierIndex={index}
                 onInvest={handleInvest}
                 isInvesting={createInvestment.isPending}
@@ -253,21 +191,21 @@ const Packages = () => {
               <LoadingSkeletonMobile key={index} />
             ))
           ) : (
-            dragonPackages.map((pkg, index) => (
+            sortedPackages.map((pkg, index) => (
               <DragonPackageCard
-                key={index}
-                id={`dragon-package-${index + 1}`}
+                key={pkg.id}
+                id={pkg.id}
                 amount={pkg.price}
                 name={pkg.name}
                 roi={`${pkg.roi}%`}
-                duration={`${pkg.durationDays} days`}
-                durationDays={pkg.durationDays}
-                waitPeriod={pkg.waitPeriod}
-                riskLevel={pkg.riskLevel}
-                strategy={pkg.strategy}
-                features={pkg.features}
+                duration={`${pkg.duration_days} days`}
+                durationDays={pkg.duration_days}
+                waitPeriod={getWaitPeriod()}
+                riskLevel={mapRiskLevel(pkg.risk_level)}
+                strategy={pkg.ai_strategy || pkg.description || "AI-powered trading strategy"}
+                features={getPackageFeatures(pkg.price)}
                 popular={index === 4}
-                vip={index === 9}
+                vip={index === sortedPackages.length - 1}
                 tierIndex={index}
                 onInvest={handleInvest}
                 isInvesting={createInvestment.isPending}
