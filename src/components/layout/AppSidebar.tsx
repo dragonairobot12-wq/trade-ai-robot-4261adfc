@@ -6,13 +6,13 @@ import {
   History,
   Settings,
   LogOut,
-  Bot,
   ChevronRight,
   Bell,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import dragonLogo from "@/assets/dragon-logo.png";
 
 interface AppSidebarProps {
   collapsed?: boolean;
@@ -40,8 +40,8 @@ const AppSidebar = ({ collapsed = false, onCollapse }: AppSidebarProps) => {
       {/* Logo */}
       <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border">
         <Link to="/dashboard" className="flex items-center gap-3">
-          <div className="w-10 h-10 gradient-primary rounded-xl flex items-center justify-center shadow-glow">
-            <Bot className="w-6 h-6 text-primary-foreground" />
+          <div className="w-10 h-10 rounded-xl overflow-hidden shadow-glow">
+            <img src={dragonLogo} alt="Dragon AI" className="w-full h-full object-cover" />
           </div>
           {!collapsed && (
             <span className="font-bold text-lg text-sidebar-foreground">
@@ -69,11 +69,11 @@ const AppSidebar = ({ collapsed = false, onCollapse }: AppSidebarProps) => {
         <div className="p-4">
           <div className="p-4 rounded-xl bg-primary/10 border border-primary/20">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-8 h-8 gradient-primary rounded-lg flex items-center justify-center">
-                <Bot className="w-4 h-4 text-primary-foreground" />
+              <div className="w-8 h-8 rounded-lg overflow-hidden">
+                <img src={dragonLogo} alt="Dragon AI" className="w-full h-full object-cover" />
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">AI Robot</p>
+                <p className="text-xs text-muted-foreground">Dragon AI</p>
                 <div className="flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-success animate-pulse" />
                   <span className="text-sm font-medium text-sidebar-foreground">Active</span>

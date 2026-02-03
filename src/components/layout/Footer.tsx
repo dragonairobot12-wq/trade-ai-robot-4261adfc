@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { TrendingUp, Mail, MapPin } from "lucide-react";
+import { Mail, MapPin } from "lucide-react";
+import dragonLogo from "@/assets/dragon-logo.png";
 
 const Footer = () => {
   return <footer className="bg-secondary text-secondary-foreground">
@@ -8,8 +9,8 @@ const Footer = () => {
           {/* Brand */}
           <div className="space-y-4">
             <Link to="/" className="flex items-center gap-2">
-              <div className="w-10 h-10 gradient-primary rounded-xl flex items-center justify-center">
-                <TrendingUp className="w-6 h-6 text-primary-foreground" />
+              <div className="w-10 h-10 rounded-xl overflow-hidden">
+                <img src={dragonLogo} alt="Dragon AI" className="w-full h-full object-cover" />
               </div>
               <span className="text-xl font-bold">Dragon AI Robot</span>
             </Link>

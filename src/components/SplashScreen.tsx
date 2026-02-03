@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { TrendingUp } from "lucide-react";
+import dragonLogo from "@/assets/dragon-logo.png";
 
 interface SplashScreenProps {
   onComplete: () => void;
@@ -158,11 +158,11 @@ const SplashScreen = ({ onComplete, minDuration = 3000 }: SplashScreenProps) => 
                 }}
                 className="relative"
               >
-                <div className="relative w-24 h-24 md:w-32 md:h-32 rounded-3xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-700 flex items-center justify-center shadow-2xl shadow-emerald-500/30">
+                <div className="relative w-24 h-24 md:w-32 md:h-32 rounded-3xl overflow-hidden shadow-2xl shadow-emerald-500/30">
                   {/* Inner glow */}
-                  <div className="absolute inset-[2px] rounded-3xl bg-gradient-to-br from-emerald-400/20 to-transparent" />
+                  <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-emerald-400/20 to-transparent z-10 pointer-events-none" />
                   
-                  <TrendingUp className="w-12 h-12 md:w-16 md:h-16 text-white drop-shadow-lg" />
+                  <img src={dragonLogo} alt="Dragon AI" className="w-full h-full object-cover" />
                   
                   {/* Shine effect */}
                   <motion.div

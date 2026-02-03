@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Bell, Search, Menu, Bot, Moon, Sun, LogOut } from "lucide-react";
+import { Bell, Search, Menu, Moon, Sun, LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import dragonLogo from "@/assets/dragon-logo.png";
 import { useProfile } from "@/hooks/useProfile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -58,8 +59,8 @@ const TopBar = ({ onMenuClick }: TopBarProps) => {
           </Button>
 
           <Link to="/dashboard" className="flex items-center gap-2 lg:hidden">
-            <div className="w-8 h-8 gradient-primary rounded-lg flex items-center justify-center">
-              <Bot className="w-4 h-4 text-primary-foreground" />
+            <div className="w-8 h-8 rounded-lg overflow-hidden">
+              <img src={dragonLogo} alt="Dragon AI" className="w-full h-full object-cover" />
             </div>
             <span className="font-bold text-gradient">Dragon AI</span>
           </Link>
