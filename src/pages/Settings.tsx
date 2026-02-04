@@ -30,12 +30,15 @@ import {
   BadgeCheck,
   CreditCard,
   Settings as SettingsIcon,
+  Trash2,
+  Star,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { useWallet } from "@/hooks/useWallet";
 import { useInvestments } from "@/hooks/useInvestments";
+import { useWalletAddresses } from "@/hooks/useWalletAddresses";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -69,6 +72,13 @@ const Settings = () => {
   const { profile, isLoading, updateProfile } = useProfile();
   const { wallet } = useWallet();
   const { activeInvestments } = useInvestments();
+  const { 
+    walletAddresses, 
+    isLoading: walletAddressesLoading, 
+    saveWalletAddress, 
+    deleteWalletAddress,
+    getWalletsByNetwork,
+  } = useWalletAddresses();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
@@ -139,9 +149,9 @@ const Settings = () => {
     navigate("/login");
   };
 
-  const handleCopyAddress = () => {
-    if (walletAddress) {
-      navigator.clipboard.writeText(walletAddress);
+  const handleCopyAddress = (address: string) => {
+    if (address) {
+      navigator.clipboard.writeText(address);
       setCopied(true);
       toast({
         title: "Copied!",
@@ -160,10 +170,17 @@ const Settings = () => {
       });
       return;
     }
-    toast({
-      title: "Wallet Saved",
-      description: `Your ${selectedNetwork} wallet address has been saved successfully.`,
+    saveWalletAddress.mutate({
+      address: walletAddress,
+      network: selectedNetwork,
+      label: `${selectedNetwork} Wallet`,
+      isDefault: getWalletsByNetwork(selectedNetwork).length === 0,
     });
+    setWalletAddress("");
+  };
+
+  const handleDeleteWallet = (id: string) => {
+    deleteWalletAddress.mutate(id);
   };
 
   const handlePasswordUpdate = () => {
@@ -549,7 +566,7 @@ const Settings = () => {
                           <Wallet className="w-5 h-5 text-primary" />
                           Withdrawal Wallet
                         </CardTitle>
-                        <CardDescription>Configure your USDT withdrawal address</CardDescription>
+                        <CardDescription>Configure your USDT withdrawal addresses</CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-6">
                         {/* Network Selection */}
@@ -567,18 +584,82 @@ const Settings = () => {
                                     : "bg-card/50 border-border/50 hover:border-primary/30"
                                 )}
                               >
-                                <p className="font-semibold">{network}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  {network === "TRC20" ? "TRON Network" : "BNB Smart Chain"}
-                                </p>
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <p className="font-semibold">{network}</p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {network === "TRC20" ? "TRON Network" : "BNB Smart Chain"}
+                                    </p>
+                                  </div>
+                                  {getWalletsByNetwork(network).length > 0 && (
+                                    <div className="px-2 py-1 rounded-full bg-success/20 text-success text-xs">
+                                      {getWalletsByNetwork(network).length} saved
+                                    </div>
+                                  )}
+                                </div>
                               </button>
                             ))}
                           </div>
                         </div>
 
-                        {/* Wallet Address Input */}
+                        {/* Saved Wallets for Selected Network */}
+                        {walletAddressesLoading ? (
+                          <div className="space-y-3">
+                            <Skeleton className="h-16 w-full" />
+                            <Skeleton className="h-16 w-full" />
+                          </div>
+                        ) : getWalletsByNetwork(selectedNetwork).length > 0 && (
+                          <div className="space-y-3">
+                            <Label className="text-muted-foreground">Saved {selectedNetwork} Wallets</Label>
+                            <div className="space-y-2">
+                              {getWalletsByNetwork(selectedNetwork).map((wallet) => (
+                                <div
+                                  key={wallet.id}
+                                  className={cn(
+                                    "flex items-center justify-between p-3 rounded-xl border transition-all",
+                                    wallet.is_default
+                                      ? "bg-primary/10 border-primary/30"
+                                      : "bg-card/50 border-border/50"
+                                  )}
+                                >
+                                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                                    {wallet.is_default && (
+                                      <Star className="w-4 h-4 text-primary flex-shrink-0" />
+                                    )}
+                                    <div className="min-w-0">
+                                      <p className="text-sm font-medium truncate">{wallet.label}</p>
+                                      <p className="text-xs text-muted-foreground font-mono truncate">
+                                        {wallet.address.slice(0, 12)}...{wallet.address.slice(-8)}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8"
+                                      onClick={() => handleCopyAddress(wallet.address)}
+                                    >
+                                      <Copy className="w-4 h-4 text-muted-foreground" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8 text-destructive hover:text-destructive"
+                                      onClick={() => handleDeleteWallet(wallet.id)}
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Add New Wallet Address */}
                         <div className="space-y-3 p-4 rounded-xl bg-gradient-to-br from-primary/5 to-accent/5 border border-primary/20">
-                          <Label className="text-muted-foreground">USDT Wallet Address ({selectedNetwork})</Label>
+                          <Label className="text-muted-foreground">Add New {selectedNetwork} Wallet</Label>
                           <div className="relative">
                             <Input
                               value={walletAddress}
@@ -586,19 +667,20 @@ const Settings = () => {
                               placeholder={selectedNetwork === "TRC20" ? "T..." : "0x..."}
                               className="bg-background/50 border-border/50 pr-12 font-mono text-sm"
                             />
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
-                              onClick={handleCopyAddress}
-                              disabled={!walletAddress}
-                            >
-                              {copied ? (
-                                <Check className="w-4 h-4 text-success" />
-                              ) : (
-                                <Copy className="w-4 h-4 text-muted-foreground" />
-                              )}
-                            </Button>
+                            {walletAddress && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
+                                onClick={() => handleCopyAddress(walletAddress)}
+                              >
+                                {copied ? (
+                                  <Check className="w-4 h-4 text-success" />
+                                ) : (
+                                  <Copy className="w-4 h-4 text-muted-foreground" />
+                                )}
+                              </Button>
+                            )}
                           </div>
                           
                           {/* Warning Message */}
@@ -615,12 +697,25 @@ const Settings = () => {
                             variant="gradient" 
                             size="lg"
                             onClick={handleSaveWallet}
+                            disabled={!walletAddress || saveWalletAddress.isPending}
                             className="flex-1 md:flex-none"
                           >
-                            Save Wallet Address
+                            {saveWalletAddress.isPending ? (
+                              <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                Saving...
+                              </>
+                            ) : (
+                              "Save Wallet Address"
+                            )}
                           </Button>
-                          <Button variant="outline" size="lg" className="border-border/50">
-                            Cancel
+                          <Button 
+                            variant="outline" 
+                            size="lg" 
+                            className="border-border/50"
+                            onClick={() => setWalletAddress("")}
+                          >
+                            Clear
                           </Button>
                         </div>
                       </CardContent>
