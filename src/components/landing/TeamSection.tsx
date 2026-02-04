@@ -1,11 +1,15 @@
 import { motion } from "framer-motion";
 import { Linkedin, Twitter } from "lucide-react";
+import alexChenImg from "@/assets/team/alex-chen.jpg";
+import sarahMitchellImg from "@/assets/team/sarah-mitchell.jpg";
+import davidParkImg from "@/assets/team/david-park.jpg";
+import elenaRodriguezImg from "@/assets/team/emma-rodriguez.jpg";
 
 const teamMembers = [
   {
     name: "Alex Chen",
     role: "CEO & Founder",
-    image: "👨‍💼",
+    image: alexChenImg,
     bio: "Former Goldman Sachs quant with 15+ years in algorithmic trading.",
     linkedin: "#",
     twitter: "#"
@@ -13,7 +17,7 @@ const teamMembers = [
   {
     name: "Sarah Mitchell",
     role: "CTO",
-    image: "👩‍💻",
+    image: sarahMitchellImg,
     bio: "Ex-Google AI researcher, PhD in Machine Learning from MIT.",
     linkedin: "#",
     twitter: "#"
@@ -21,7 +25,7 @@ const teamMembers = [
   {
     name: "Marcus Johnson",
     role: "Lead Blockchain Dev",
-    image: "👨‍🔬",
+    image: davidParkImg,
     bio: "Core contributor to Ethereum. 10+ years in DeFi development.",
     linkedin: "#",
     twitter: "#"
@@ -29,7 +33,7 @@ const teamMembers = [
   {
     name: "Elena Rodriguez",
     role: "Head of Risk",
-    image: "👩‍⚖️",
+    image: elenaRodriguezImg,
     bio: "Former JP Morgan risk manager. CFA charterholder.",
     linkedin: "#",
     twitter: "#"
@@ -72,8 +76,12 @@ const TeamSection = () => {
             >
               {/* Profile Image */}
               <div className="relative mx-auto mb-6">
-                <div className="w-32 h-32 mx-auto rounded-full glass-card-glow flex items-center justify-center text-6xl group-hover:shadow-glow transition-shadow duration-300">
-                  {member.image}
+                <div className="w-32 h-32 mx-auto rounded-full overflow-hidden glass-card-glow group-hover:shadow-glow transition-shadow duration-300">
+                  <img 
+                    src={member.image} 
+                    alt={member.name}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
                 {/* Glow Ring */}
                 <div className="absolute inset-0 rounded-full border-2 border-transparent group-hover:border-primary/50 transition-colors" />
