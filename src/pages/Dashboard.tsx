@@ -1,11 +1,13 @@
-import { Wallet, TrendingUp, DollarSign, Bot, Lock, Coins } from "lucide-react";
+import { motion } from "framer-motion";
+import { Bot, Sparkles } from "lucide-react";
 import AppLayout from "@/components/layout/AppLayout";
-import StatCard from "@/components/dashboard/StatCard";
-import AIStatusWidget from "@/components/dashboard/AIStatusWidget";
-import PerformanceChart from "@/components/dashboard/PerformanceChart";
-import ActiveInvestments from "@/components/dashboard/ActiveInvestments";
-import PaginatedTransactions from "@/components/dashboard/PaginatedTransactions";
+import DualBalanceCards from "@/components/dashboard/DualBalanceCards";
+import ProfitGrowthChart from "@/components/dashboard/ProfitGrowthChart";
+import ActiveRobotsWidget from "@/components/dashboard/ActiveRobotsWidget";
+import QuickStatsRow from "@/components/dashboard/QuickStatsRow";
 import TradingViewChart from "@/components/dashboard/TradingViewChart";
+import PaginatedTransactions from "@/components/dashboard/PaginatedTransactions";
+import AnimatedCounter from "@/components/dashboard/AnimatedCounter";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWallet } from "@/hooks/useWallet";
 import { useProfile } from "@/hooks/useProfile";
@@ -13,106 +15,149 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const Dashboard = () => {
   const { user } = useAuth();
-  const { wallet, isLoading: walletLoading } = useWallet();
+  const { wallet, isLoading: walletLoading, MINIMUM_WITHDRAWAL_AMOUNT } = useWallet();
   const { profile, isLoading: profileLoading } = useProfile();
 
   const isLoading = walletLoading || profileLoading;
   const displayName = profile?.full_name?.split(" ")[0] || user?.email?.split("@")[0] || "User";
 
+  // Calculate total portfolio value
+  const totalPortfolio = (wallet?.deposit_balance || 0) + (wallet?.profit_balance || 0);
+
+  // Mock next payout hours (in real app, calculate from investment schedule)
+  const nextPayoutHours = 12;
+
   return (
     <AppLayout>
       <div className="p-4 lg:p-6 space-y-6">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            {isLoading ? (
-              <>
-                <Skeleton className="h-8 w-48 mb-2" />
-                <Skeleton className="h-5 w-64" />
-              </>
-            ) : (
-              <>
-                <h1 className="text-2xl font-bold">Welcome back, {displayName}</h1>
-                <p className="text-muted-foreground">Here's your portfolio overview</p>
-              </>
-            )}
-          </div>
-          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-success/10 border border-success/20">
-            <span className="w-2 h-2 rounded-full bg-success animate-pulse" />
-            <span className="text-sm font-medium text-success">AI Robot Active</span>
-          </div>
-        </div>
+        {/* Hero Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="relative"
+        >
+          {/* Background glow */}
+          <div className="absolute -top-20 -left-20 w-60 h-60 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
+          
+          <div className="relative flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
+            {/* Greeting & Portfolio Value */}
+            <div className="space-y-3">
+              {isLoading ? (
+                <>
+                  <Skeleton className="h-7 w-72 mb-2" />
+                  <Skeleton className="h-5 w-48" />
+                  <Skeleton className="h-16 w-64 mt-4" />
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-primary" />
+                    <span className="text-sm text-primary font-medium">Dragon AI Trading</span>
+                  </div>
+                  <h1 className="text-2xl lg:text-3xl font-bold">
+                    Welcome back, <span className="text-gradient">{displayName}</span>!
+                  </h1>
+                  <p className="text-muted-foreground">
+                    Your AI Robots are working for you 24/7
+                  </p>
+                  
+                  {/* Total Portfolio Value */}
+                  <div className="mt-4 pt-4 border-t border-border/50">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
+                      Total Portfolio Value
+                    </p>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-primary via-primary to-success bg-clip-text text-transparent">
+                        $<AnimatedCounter value={totalPortfolio} decimals={2} duration={2000} />
+                      </span>
+                      <span className="text-lg text-muted-foreground">USDT</span>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* AI Status Badge */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-success/10 border border-success/30 backdrop-blur-sm"
+            >
+              <div className="relative">
+                <Bot className="w-6 h-6 text-success" />
+                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-success animate-pulse" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-success">AI Robots Active</p>
+                <p className="text-xs text-muted-foreground">Trading in progress</p>
+              </div>
+            </motion.div>
+          </div>
+        </motion.div>
+
+        {/* Dual Balance Cards - Main Focus */}
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
+            <Skeleton className="h-64 rounded-xl" />
+            <Skeleton className="h-64 rounded-xl" />
+          </div>
+        ) : (
+          <DualBalanceCards
+            depositBalance={wallet?.deposit_balance || 0}
+            profitBalance={wallet?.profit_balance || 0}
+            minimumWithdrawal={MINIMUM_WITHDRAWAL_AMOUNT}
+          />
+        )}
+
+        {/* Visual Analytics Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
           {isLoading ? (
             <>
-              {[1, 2, 3, 4].map((i) => (
-                <Skeleton key={i} className="h-32 rounded-xl" />
-              ))}
+              <Skeleton className="h-60 rounded-xl" />
+              <Skeleton className="h-60 rounded-xl" />
             </>
           ) : (
             <>
-              <StatCard
-                title="Active Investment"
-                value={wallet?.deposit_balance || 0}
-                prefix="$"
-                changeLabel="Locked"
-                icon={Lock}
-                iconColor="primary"
-              />
-              <StatCard
-                title="Available Profit"
-                value={wallet?.profit_balance || 0}
-                prefix="$"
-                changeLabel="Withdrawable"
-                icon={Coins}
-                iconColor="success"
-              />
-              <StatCard
-                title="Daily Profit"
-                value={(wallet?.total_profit || 0) / 30}
-                prefix="$"
-                changeLabel="Today"
-                icon={DollarSign}
-                iconColor="warning"
-              />
-              <StatCard
-                title="Total ROI"
-                value={wallet?.total_invested && wallet.total_invested > 0 
-                  ? ((wallet.total_profit || 0) / wallet.total_invested) * 100 
-                  : 0}
-                suffix="%"
-                decimals={1}
-                changeLabel="Lifetime"
-                icon={TrendingUp}
-                iconColor="primary"
-              />
+              <ProfitGrowthChart totalProfit={wallet?.total_profit || 0} />
+              <ActiveRobotsWidget />
             </>
           )}
         </div>
 
-        {/* TradingView Chart - Hero Section */}
-        <TradingViewChart className="w-full" />
-
-        {/* Main Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Chart - Spans 2 columns */}
-          <div className="lg:col-span-2">
-            <PerformanceChart />
+        {/* Quick Stats Row */}
+        {isLoading ? (
+          <div className="grid grid-cols-3 gap-3 lg:gap-4">
+            <Skeleton className="h-24 rounded-xl" />
+            <Skeleton className="h-24 rounded-xl" />
+            <Skeleton className="h-24 rounded-xl" />
           </div>
+        ) : (
+          <QuickStatsRow
+            totalWithdrawn={wallet?.total_withdrawn || 0}
+            referralBonus={0} // TODO: Implement referral system
+            nextPayoutHours={nextPayoutHours}
+          />
+        )}
 
-          {/* AI Status Widget */}
-          <div>
-            <AIStatusWidget status="Active" />
-          </div>
-        </div>
+        {/* TradingView Chart */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 1.1 }}
+        >
+          <TradingViewChart className="w-full" />
+        </motion.div>
 
-        {/* Secondary Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <ActiveInvestments />
+        {/* Recent Transactions */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 1.2 }}
+        >
           <PaginatedTransactions />
-        </div>
+        </motion.div>
       </div>
     </AppLayout>
   );
