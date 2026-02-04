@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import AdminRoute from "@/components/admin/AdminRoute";
 import SplashScreen from "@/components/SplashScreen";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import PageLoader from "@/components/PageLoader";
@@ -26,6 +27,12 @@ const Settings = lazy(() => import("./pages/Settings"));
 const ProductDemo = lazy(() => import("./pages/ProductDemo"));
 const Investors = lazy(() => import("./pages/Investors"));
 const Team = lazy(() => import("./pages/Team"));
+
+// Admin pages
+const Admin = lazy(() => import("./pages/Admin"));
+const AdminUsers = lazy(() => import("./pages/AdminUsers"));
+const AdminDeposits = lazy(() => import("./pages/AdminDeposits"));
+const AdminWithdrawals = lazy(() => import("./pages/AdminWithdrawals"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -116,6 +123,40 @@ const App = () => {
                       <ProtectedRoute>
                         <Settings />
                       </ProtectedRoute>
+                    }
+                  />
+
+                  {/* Admin Routes */}
+                  <Route
+                    path="/admin"
+                    element={
+                      <AdminRoute>
+                        <Admin />
+                      </AdminRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/users"
+                    element={
+                      <AdminRoute>
+                        <AdminUsers />
+                      </AdminRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/deposits"
+                    element={
+                      <AdminRoute>
+                        <AdminDeposits />
+                      </AdminRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/withdrawals"
+                    element={
+                      <AdminRoute>
+                        <AdminWithdrawals />
+                      </AdminRoute>
                     }
                   />
 
