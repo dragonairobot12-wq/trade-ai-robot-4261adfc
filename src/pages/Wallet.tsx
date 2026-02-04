@@ -15,6 +15,8 @@ import {
   Loader2,
   Clock,
   Coins,
+  Lock,
+  Info,
 } from "lucide-react";
 import USDTDepositHub from "@/components/wallet/USDTDepositHub";
 import { cn } from "@/lib/utils";
@@ -44,8 +46,10 @@ const Wallet = () => {
   } = useWallet();
 
   const withdrawAmountNum = parseFloat(withdrawAmount) || 0;
+  const withdrawableBalance = wallet?.profit_balance || 0;
   const isAmountBelowMinimum = withdrawAmountNum > 0 && withdrawAmountNum < MINIMUM_WITHDRAWAL_AMOUNT;
-  const isBalanceBelowMinimum = (wallet?.balance || 0) < MINIMUM_WITHDRAWAL_AMOUNT;
+  const isProfitBelowMinimum = withdrawableBalance < MINIMUM_WITHDRAWAL_AMOUNT;
+  const isAmountExceedsProfit = withdrawAmountNum > withdrawableBalance;
 
   const handleWithdraw = () => {
     const amount = parseFloat(withdrawAmount);
@@ -76,10 +80,10 @@ const Wallet = () => {
       return;
     }
 
-    if (wallet && amount > wallet.balance) {
+    if (wallet && amount > wallet.profit_balance) {
       toast({
-        title: "Insufficient Balance",
-        description: "You don't have enough balance for this withdrawal",
+        title: "Capital Locked",
+        description: "Your invested capital is locked for trading. You can only withdraw your accumulated profits.",
         variant: "destructive",
       });
       return;
@@ -211,29 +215,51 @@ const Wallet = () => {
               </TabsContent>
 
               <TabsContent value="withdraw" className="space-y-6">
-                {/* Low Balance Warning */}
-                {isBalanceBelowMinimum && (
+                {/* Profit Withdrawal Note */}
+                <div className="p-4 rounded-xl bg-muted/50 border border-border">
+                  <div className="flex items-start gap-3">
+                    <Info className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" />
+                    <p className="text-sm text-muted-foreground">
+                      <span className="font-medium text-foreground">Note:</span> Only profits earned from your AI Robots can be withdrawn. Initial deposits are used for active trading and remain locked.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Low Profit Warning */}
+                {isProfitBelowMinimum && (
                   <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/30">
                     <div className="flex items-center gap-3">
                       <AlertCircle className="w-5 h-5 text-destructive shrink-0" />
                       <div>
-                        <p className="font-medium text-destructive">Insufficient Balance</p>
+                        <p className="font-medium text-destructive">Insufficient Profits</p>
                         <p className="text-sm text-muted-foreground">
-                          You need at least ${MINIMUM_WITHDRAWAL_AMOUNT} in your balance to request a withdrawal.
+                          You need at least ${MINIMUM_WITHDRAWAL_AMOUNT} in profits to request a withdrawal.
                         </p>
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* Available for Withdrawal */}
-                <div className="p-4 rounded-xl bg-success/10 border border-success/20">
-                  <div className="flex items-center gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-success" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Available for Withdrawal</p>
-                      <p className="text-xl font-bold text-success">${wallet?.balance?.toFixed(2) || "0.00"}</p>
+                {/* Balance Cards */}
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Locked Investment */}
+                  <div className="p-4 rounded-xl bg-primary/10 border border-primary/20">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Lock className="w-4 h-4 text-primary" />
+                      <p className="text-xs text-muted-foreground">Active Investment</p>
                     </div>
+                    <p className="text-xl font-bold text-primary">${wallet?.deposit_balance?.toFixed(2) || "0.00"}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Locked for trading</p>
+                  </div>
+
+                  {/* Available Profit */}
+                  <div className="p-4 rounded-xl bg-success/10 border border-success/20">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Coins className="w-4 h-4 text-success" />
+                      <p className="text-xs text-muted-foreground">Available Profit</p>
+                    </div>
+                    <p className="text-xl font-bold text-success">${withdrawableBalance.toFixed(2)}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Withdrawable</p>
                   </div>
                 </div>
 
@@ -272,11 +298,11 @@ const Wallet = () => {
                       onChange={(e) => setWithdrawAmount(e.target.value)}
                       className={cn(
                         "pl-8 text-lg h-12",
-                        isAmountBelowMinimum && "border-destructive focus-visible:ring-destructive"
+                        (isAmountBelowMinimum || isAmountExceedsProfit) && "border-destructive focus-visible:ring-destructive"
                       )}
-                      max={wallet?.balance || 0}
+                      max={withdrawableBalance}
                       min="0"
-                      disabled={isBalanceBelowMinimum}
+                      disabled={isProfitBelowMinimum}
                     />
                   </div>
                   {/* Minimum Amount Error */}
@@ -285,15 +311,21 @@ const Wallet = () => {
                       Minimum withdrawal amount is ${MINIMUM_WITHDRAWAL_AMOUNT}. Please enter a higher amount.
                     </p>
                   )}
+                  {/* Exceeds Profit Error */}
+                  {isAmountExceedsProfit && !isAmountBelowMinimum && (
+                    <p className="text-sm text-destructive">
+                      Your invested capital is locked for trading. You can only withdraw your accumulated profits.
+                    </p>
+                  )}
                   <div className="flex gap-2">
                     {[100, 500, 1000].map((value) => (
                       <Button
                         key={value}
                         variant="outline"
                         size="sm"
-                        onClick={() => setWithdrawAmount(Math.min(value, wallet?.balance || 0).toString())}
+                        onClick={() => setWithdrawAmount(Math.min(value, withdrawableBalance).toString())}
                         className="flex-1"
-                        disabled={!wallet || wallet.balance < value}
+                        disabled={!wallet || withdrawableBalance < value}
                       >
                         ${value}
                       </Button>
@@ -301,9 +333,9 @@ const Wallet = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setWithdrawAmount((wallet?.balance || 0).toString())}
+                      onClick={() => setWithdrawAmount(withdrawableBalance.toString())}
                       className="flex-1"
-                      disabled={!wallet || wallet.balance <= 0}
+                      disabled={!wallet || withdrawableBalance <= 0}
                     >
                       Max
                     </Button>
@@ -352,8 +384,8 @@ const Wallet = () => {
                     !withdrawAddress ||
                     withdrawAmountNum <= 0 || 
                     withdrawAmountNum < MINIMUM_WITHDRAWAL_AMOUNT ||
-                    withdrawAmountNum > (wallet?.balance || 0) ||
-                    isBalanceBelowMinimum ||
+                    withdrawAmountNum > withdrawableBalance ||
+                    isProfitBelowMinimum ||
                     createWithdrawal.isPending
                   }
                 >

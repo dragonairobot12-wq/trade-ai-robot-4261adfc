@@ -1,4 +1,4 @@
-import { Wallet, TrendingUp, DollarSign, Bot } from "lucide-react";
+import { Wallet, TrendingUp, DollarSign, Bot, Lock, Coins } from "lucide-react";
 import AppLayout from "@/components/layout/AppLayout";
 import StatCard from "@/components/dashboard/StatCard";
 import AIStatusWidget from "@/components/dashboard/AIStatusWidget";
@@ -54,21 +54,19 @@ const Dashboard = () => {
           ) : (
             <>
               <StatCard
-                title="Total Balance"
-                value={wallet?.balance || 0}
+                title="Active Investment"
+                value={wallet?.deposit_balance || 0}
                 prefix="$"
-                change={wallet?.total_profit && wallet.total_profit > 0 ? 
-                  ((wallet.total_profit / (wallet.total_invested || 1)) * 100) : 0}
-                icon={Wallet}
+                changeLabel="Locked"
+                icon={Lock}
                 iconColor="primary"
               />
               <StatCard
-                title="Total Profit"
-                value={wallet?.total_profit || 0}
+                title="Available Profit"
+                value={wallet?.profit_balance || 0}
                 prefix="$"
-                change={wallet?.total_profit && wallet.total_profit > 0 ? 
-                  ((wallet.total_profit / (wallet.total_invested || 1)) * 100) : 0}
-                icon={TrendingUp}
+                changeLabel="Withdrawable"
+                icon={Coins}
                 iconColor="success"
               />
               <StatCard
@@ -80,12 +78,14 @@ const Dashboard = () => {
                 iconColor="warning"
               />
               <StatCard
-                title="Total Invested"
-                value={wallet?.total_invested || 0}
-                prefix="$"
-                decimals={0}
-                changeLabel="Active"
-                icon={Bot}
+                title="Total ROI"
+                value={wallet?.total_invested && wallet.total_invested > 0 
+                  ? ((wallet.total_profit || 0) / wallet.total_invested) * 100 
+                  : 0}
+                suffix="%"
+                decimals={1}
+                changeLabel="Lifetime"
+                icon={TrendingUp}
                 iconColor="primary"
               />
             </>
