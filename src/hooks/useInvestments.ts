@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { useMemo, useEffect } from "react";
 
 export interface InvestmentPackage {
   id: string;
@@ -30,6 +31,35 @@ export interface UserInvestment {
   updated_at: string;
   investment_packages?: InvestmentPackage;
 }
+
+// Helper to check if investment is expired based on end_date
+const isInvestmentExpired = (endDate: string): boolean => {
+  return new Date() > new Date(endDate);
+};
+
+// Calculate days remaining until expiry
+export const getDaysRemaining = (endDate: string): number => {
+  const end = new Date(endDate);
+  const now = new Date();
+  const diffTime = end.getTime() - now.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return Math.max(0, diffDays);
+};
+
+// Calculate progress percentage
+export const getProgressPercentage = (startDate: string, endDate: string): number => {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  const now = new Date();
+
+  const totalDuration = end.getTime() - start.getTime();
+  const elapsed = now.getTime() - start.getTime();
+
+  if (elapsed >= totalDuration) return 100;
+  if (elapsed <= 0) return 0;
+
+  return Math.min(100, (elapsed / totalDuration) * 100);
+};
 
 export const useInvestments = () => {
   const { user } = useAuth();
@@ -68,6 +98,51 @@ export const useInvestments = () => {
     },
     enabled: !!user?.id,
   });
+
+  // Separate investments by actual expiry status (checking end_date, not just status field)
+  const { activeInvestments, expiredInvestments, completedInvestments, newlyExpiredInvestments } = useMemo(() => {
+    const active: UserInvestment[] = [];
+    const expired: UserInvestment[] = [];
+    const completed: UserInvestment[] = [];
+    const newlyExpired: UserInvestment[] = [];
+
+    userInvestments.forEach((inv) => {
+      const isExpired = isInvestmentExpired(inv.end_date);
+      
+      if (inv.status === "completed") {
+        completed.push(inv);
+      } else if (isExpired || inv.status === "expired") {
+        expired.push(inv);
+        // Track newly expired (status still 'active' but time has passed)
+        if (inv.status === "active" && isExpired) {
+          newlyExpired.push(inv);
+        }
+      } else {
+        active.push(inv);
+      }
+    });
+
+    return { 
+      activeInvestments: active, 
+      expiredInvestments: expired, 
+      completedInvestments: completed,
+      newlyExpiredInvestments: newlyExpired
+    };
+  }, [userInvestments]);
+
+  // Show toast for newly expired investments
+  useEffect(() => {
+    if (newlyExpiredInvestments.length > 0) {
+      newlyExpiredInvestments.forEach((inv) => {
+        const packageName = inv.investment_packages?.name || "Dragon AI Robot";
+        toast({
+          title: "Investment Cycle Completed",
+          description: `Your ${packageName} has completed its cycle. Please renew your plan to continue earning.`,
+          variant: "default",
+        });
+      });
+    }
+  }, [newlyExpiredInvestments, toast]);
 
   // Create investment
   const createInvestment = useMutation({
@@ -159,11 +234,7 @@ export const useInvestments = () => {
     },
   });
 
-  // Get active investments
-  const activeInvestments = userInvestments.filter((inv) => inv.status === "active");
-  const completedInvestments = userInvestments.filter((inv) => inv.status === "completed");
-
-  // Calculate total invested and expected returns
+  // Calculate total invested and expected returns (only from active investments)
   const totalActiveInvested = activeInvestments.reduce((sum, inv) => sum + inv.amount, 0);
   const totalExpectedReturns = activeInvestments.reduce((sum, inv) => sum + inv.expected_return, 0);
 
@@ -171,10 +242,13 @@ export const useInvestments = () => {
     packages,
     userInvestments,
     activeInvestments,
+    expiredInvestments,
     completedInvestments,
     totalActiveInvested,
     totalExpectedReturns,
     isLoading: packagesLoading || investmentsLoading,
     createInvestment,
+    getDaysRemaining,
+    getProgressPercentage,
   };
 };
