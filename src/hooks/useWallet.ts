@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
 const WITHDRAWAL_FEE_PERCENTAGE = 0.10; // 10% fee
+const MINIMUM_WITHDRAWAL_AMOUNT = 50; // $50 minimum
 
 export interface WalletData {
   id: string;
@@ -161,6 +162,7 @@ export const useWallet = () => {
     mutationFn: async ({ amount, walletAddress }: { amount: number; walletAddress: string }) => {
       if (!user?.id) throw new Error("User not authenticated");
       if (!wallet) throw new Error("Wallet not found");
+      if (amount < MINIMUM_WITHDRAWAL_AMOUNT) throw new Error(`Minimum withdrawal amount is $${MINIMUM_WITHDRAWAL_AMOUNT}`);
       if (wallet.balance < amount) throw new Error("Insufficient balance");
 
       const feeAmount = amount * WITHDRAWAL_FEE_PERCENTAGE;
@@ -238,5 +240,6 @@ export const useWallet = () => {
     createWithdrawal,
     calculateWithdrawalFee,
     WITHDRAWAL_FEE_PERCENTAGE,
+    MINIMUM_WITHDRAWAL_AMOUNT,
   };
 };

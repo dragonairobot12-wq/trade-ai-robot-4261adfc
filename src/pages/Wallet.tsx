@@ -40,7 +40,12 @@ const Wallet = () => {
     createWithdrawal,
     calculateWithdrawalFee,
     WITHDRAWAL_FEE_PERCENTAGE,
+    MINIMUM_WITHDRAWAL_AMOUNT,
   } = useWallet();
+
+  const withdrawAmountNum = parseFloat(withdrawAmount) || 0;
+  const isAmountBelowMinimum = withdrawAmountNum > 0 && withdrawAmountNum < MINIMUM_WITHDRAWAL_AMOUNT;
+  const isBalanceBelowMinimum = (wallet?.balance || 0) < MINIMUM_WITHDRAWAL_AMOUNT;
 
   const handleWithdraw = () => {
     const amount = parseFloat(withdrawAmount);
@@ -48,6 +53,15 @@ const Wallet = () => {
       toast({
         title: "Invalid Amount",
         description: "Please enter a valid withdrawal amount",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (amount < MINIMUM_WITHDRAWAL_AMOUNT) {
+      toast({
+        title: "Minimum Not Met",
+        description: `Minimum withdrawal amount is $${MINIMUM_WITHDRAWAL_AMOUNT}`,
         variant: "destructive",
       });
       return;
@@ -197,6 +211,21 @@ const Wallet = () => {
               </TabsContent>
 
               <TabsContent value="withdraw" className="space-y-6">
+                {/* Low Balance Warning */}
+                {isBalanceBelowMinimum && (
+                  <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/30">
+                    <div className="flex items-center gap-3">
+                      <AlertCircle className="w-5 h-5 text-destructive shrink-0" />
+                      <div>
+                        <p className="font-medium text-destructive">Insufficient Balance</p>
+                        <p className="text-sm text-muted-foreground">
+                          You need at least ${MINIMUM_WITHDRAWAL_AMOUNT} in your balance to request a withdrawal.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Available for Withdrawal */}
                 <div className="p-4 rounded-xl bg-success/10 border border-success/20">
                   <div className="flex items-center gap-3">
@@ -238,14 +267,24 @@ const Wallet = () => {
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
                     <Input
                       type="number"
-                      placeholder="0.00"
+                      placeholder={`Enter amount (Min. $${MINIMUM_WITHDRAWAL_AMOUNT})`}
                       value={withdrawAmount}
                       onChange={(e) => setWithdrawAmount(e.target.value)}
-                      className="pl-8 text-lg h-12"
+                      className={cn(
+                        "pl-8 text-lg h-12",
+                        isAmountBelowMinimum && "border-destructive focus-visible:ring-destructive"
+                      )}
                       max={wallet?.balance || 0}
                       min="0"
+                      disabled={isBalanceBelowMinimum}
                     />
                   </div>
+                  {/* Minimum Amount Error */}
+                  {isAmountBelowMinimum && (
+                    <p className="text-sm text-destructive">
+                      Minimum withdrawal amount is ${MINIMUM_WITHDRAWAL_AMOUNT}. Please enter a higher amount.
+                    </p>
+                  )}
                   <div className="flex gap-2">
                     {[100, 500, 1000].map((value) => (
                       <Button
@@ -311,8 +350,10 @@ const Wallet = () => {
                   disabled={
                     !withdrawAmount || 
                     !withdrawAddress ||
-                    parseFloat(withdrawAmount) <= 0 || 
-                    parseFloat(withdrawAmount) > (wallet?.balance || 0) ||
+                    withdrawAmountNum <= 0 || 
+                    withdrawAmountNum < MINIMUM_WITHDRAWAL_AMOUNT ||
+                    withdrawAmountNum > (wallet?.balance || 0) ||
+                    isBalanceBelowMinimum ||
                     createWithdrawal.isPending
                   }
                 >
