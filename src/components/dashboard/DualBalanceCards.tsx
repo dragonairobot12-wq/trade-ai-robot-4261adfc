@@ -5,14 +5,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import AnimatedCounter from "./AnimatedCounter";
+import RefreshBalanceButton from "./RefreshBalanceButton";
 
 interface DualBalanceCardsProps {
   depositBalance: number;
   profitBalance: number;
   minimumWithdrawal: number;
+  onRefresh?: () => Promise<unknown>;
 }
 
-const DualBalanceCards = ({ depositBalance, profitBalance, minimumWithdrawal }: DualBalanceCardsProps) => {
+const DualBalanceCards = ({ depositBalance, profitBalance, minimumWithdrawal, onRefresh }: DualBalanceCardsProps) => {
   const cardVariants = {
     hidden: { opacity: 0, y: 30, scale: 0.95 },
     visible: { opacity: 1, y: 0, scale: 1 }
@@ -38,10 +40,18 @@ const DualBalanceCards = ({ depositBalance, profitBalance, minimumWithdrawal }: 
               <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-600 to-slate-700 border border-slate-500/50 flex items-center justify-center shadow-lg">
                 <Shield className="w-7 h-7 text-slate-200" />
               </div>
-              <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 animate-pulse">
-                <Lock className="w-3 h-3 mr-1" />
-                Locked & Trading
-              </Badge>
+              <div className="flex items-center gap-2">
+                {onRefresh && (
+                  <RefreshBalanceButton 
+                    onRefresh={onRefresh} 
+                    currentBalance={depositBalance + profitBalance}
+                  />
+                )}
+                <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 animate-pulse">
+                  <Lock className="w-3 h-3 mr-1" />
+                  Locked & Trading
+                </Badge>
+              </div>
             </div>
 
             {/* Title & Value */}

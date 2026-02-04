@@ -17,7 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const Dashboard = () => {
   const { user } = useAuth();
-  const { wallet, isLoading: walletLoading, MINIMUM_WITHDRAWAL_AMOUNT } = useWallet();
+  const { wallet, isLoading: walletLoading, MINIMUM_WITHDRAWAL_AMOUNT, refetchWallet } = useWallet();
   const { profile, isLoading: profileLoading } = useProfile();
   const { expiredInvestments } = useInvestments();
 
@@ -114,6 +114,7 @@ const Dashboard = () => {
             depositBalance={wallet?.deposit_balance || 0}
             profitBalance={wallet?.profit_balance || 0}
             minimumWithdrawal={MINIMUM_WITHDRAWAL_AMOUNT}
+            onRefresh={refetchWallet}
           />
         )}
 
