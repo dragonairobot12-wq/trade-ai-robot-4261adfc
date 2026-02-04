@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useWallet } from "@/hooks/useWallet";
 import AnimatedCounter from "@/components/dashboard/AnimatedCounter";
+import RefreshBalanceButton from "@/components/dashboard/RefreshBalanceButton";
 
 // Wallet addresses moved to USDTDepositHub component
 
@@ -41,6 +42,7 @@ const Wallet = () => {
     createDeposit, 
     createWithdrawal,
     calculateWithdrawalFee,
+    refetchWallet,
     WITHDRAWAL_FEE_PERCENTAGE,
     MINIMUM_WITHDRAWAL_AMOUNT,
   } = useWallet();
@@ -123,9 +125,16 @@ const Wallet = () => {
     <AppLayout>
       <div className="p-4 lg:p-6 space-y-6">
         {/* Header */}
-        <div>
-          <h1 className="text-2xl font-bold">Wallet</h1>
-          <p className="text-muted-foreground">Manage your funds and transactions</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">Wallet</h1>
+            <p className="text-muted-foreground">Manage your funds and transactions</p>
+          </div>
+          <RefreshBalanceButton 
+            onRefresh={refetchWallet} 
+            currentBalance={wallet?.balance || 0}
+            variant="button"
+          />
         </div>
 
         {/* Balance Cards */}

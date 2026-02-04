@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -72,7 +72,10 @@ export const useWallet = () => {
     refetchOnMount: true, // Refetch when component mounts
   });
 
-  // Set up real-time subscription for wallet updates
+  // Track previous balance for real-time notifications
+  const previousBalanceRef = useRef<number | null>(null);
+
+  // Set up real-time subscription for wallet updates with notifications
   useEffect(() => {
     if (!user?.id) return;
 
@@ -81,13 +84,39 @@ export const useWallet = () => {
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'UPDATE',
           schema: 'public',
           table: 'wallets',
           filter: `user_id=eq.${user.id}`,
         },
         (payload) => {
           console.log('Wallet updated in real-time:', payload);
+          
+          const newData = payload.new as WalletData;
+          const oldData = payload.old as Partial<WalletData>;
+          
+          // Check if balance increased
+          if (oldData.balance !== undefined && newData.balance > oldData.balance) {
+            const difference = newData.balance - oldData.balance;
+            toast({
+              title: "✅ Balance Updated!",
+              description: `+$${difference.toFixed(2)} added to your account`,
+              className: "bg-success/10 border-success/30",
+            });
+          }
+          
+          // Check if profit balance increased
+          if (oldData.profit_balance !== undefined && newData.profit_balance > oldData.profit_balance) {
+            const profitDiff = newData.profit_balance - oldData.profit_balance;
+            if (profitDiff > 0 && oldData.balance === newData.balance) {
+              toast({
+                title: "💰 Profit Received!",
+                description: `+$${profitDiff.toFixed(2)} profit added`,
+                className: "bg-success/10 border-success/30",
+              });
+            }
+          }
+          
           // Invalidate and refetch wallet data
           queryClient.invalidateQueries({ queryKey: ["wallet", user.id] });
         }
@@ -97,7 +126,14 @@ export const useWallet = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user?.id, queryClient]);
+  }, [user?.id, queryClient, toast]);
+
+  // Update previous balance ref when wallet changes
+  useEffect(() => {
+    if (wallet?.balance !== undefined) {
+      previousBalanceRef.current = wallet.balance;
+    }
+  }, [wallet?.balance]);
 
   // Fetch deposits with real-time updates
   const { data: deposits = [], isLoading: depositsLoading } = useQuery({
