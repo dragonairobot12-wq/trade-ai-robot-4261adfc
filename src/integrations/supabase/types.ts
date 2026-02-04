@@ -212,7 +212,9 @@ export type Database = {
         Row: {
           balance: number
           created_at: string
+          deposit_balance: number
           id: string
+          profit_balance: number
           total_invested: number
           total_profit: number
           total_withdrawn: number
@@ -222,7 +224,9 @@ export type Database = {
         Insert: {
           balance?: number
           created_at?: string
+          deposit_balance?: number
           id?: string
+          profit_balance?: number
           total_invested?: number
           total_profit?: number
           total_withdrawn?: number
@@ -232,7 +236,9 @@ export type Database = {
         Update: {
           balance?: number
           created_at?: string
+          deposit_balance?: number
           id?: string
+          profit_balance?: number
           total_invested?: number
           total_profit?: number
           total_withdrawn?: number

@@ -13,6 +13,8 @@ export interface WalletData {
   total_invested: number;
   total_withdrawn: number;
   total_profit: number;
+  deposit_balance: number;
+  profit_balance: number;
   created_at: string;
   updated_at: string;
 }
@@ -163,7 +165,8 @@ export const useWallet = () => {
       if (!user?.id) throw new Error("User not authenticated");
       if (!wallet) throw new Error("Wallet not found");
       if (amount < MINIMUM_WITHDRAWAL_AMOUNT) throw new Error(`Minimum withdrawal amount is $${MINIMUM_WITHDRAWAL_AMOUNT}`);
-      if (wallet.balance < amount) throw new Error("Insufficient balance");
+      if (wallet.profit_balance < amount) throw new Error("Your invested capital is locked for trading. You can only withdraw your accumulated profits.");
+      if (amount > wallet.profit_balance) throw new Error("Insufficient withdrawable profit");
 
       const feeAmount = amount * WITHDRAWAL_FEE_PERCENTAGE;
       const amountSent = amount - feeAmount;
