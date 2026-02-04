@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -49,8 +50,8 @@ export const useWallet = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch wallet data with 5-minute cache
-  const { data: wallet, isLoading: walletLoading } = useQuery({
+  // Fetch wallet data with refetch on window focus
+  const { data: wallet, isLoading: walletLoading, refetch: refetchWallet } = useQuery({
     queryKey: ["wallet", user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
@@ -65,11 +66,40 @@ export const useWallet = () => {
       return data as WalletData;
     },
     enabled: !!user?.id,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
+    staleTime: 1 * 60 * 1000, // 1 minute (reduced for more frequent updates)
+    gcTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: true, // Refetch when window regains focus
+    refetchOnMount: true, // Refetch when component mounts
   });
 
-  // Fetch deposits with 5-minute cache
+  // Set up real-time subscription for wallet updates
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const channel = supabase
+      .channel(`wallet-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'wallets',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          console.log('Wallet updated in real-time:', payload);
+          // Invalidate and refetch wallet data
+          queryClient.invalidateQueries({ queryKey: ["wallet", user.id] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, queryClient]);
+
+  // Fetch deposits with real-time updates
   const { data: deposits = [], isLoading: depositsLoading } = useQuery({
     queryKey: ["deposits", user?.id],
     queryFn: async () => {
@@ -85,11 +115,13 @@ export const useWallet = () => {
       return data as DepositData[];
     },
     enabled: !!user?.id,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
+    staleTime: 1 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
   });
 
-  // Fetch withdrawals with 5-minute cache
+  // Fetch withdrawals with real-time updates
   const { data: withdrawals = [], isLoading: withdrawalsLoading } = useQuery({
     queryKey: ["withdrawals", user?.id],
     queryFn: async () => {
@@ -105,9 +137,59 @@ export const useWallet = () => {
       return data as WithdrawalData[];
     },
     enabled: !!user?.id,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
+    staleTime: 1 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
   });
+
+  // Set up real-time subscription for deposits and withdrawals
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const depositsChannel = supabase
+      .channel(`deposits-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'deposits',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          console.log('Deposit updated in real-time:', payload);
+          queryClient.invalidateQueries({ queryKey: ["deposits", user.id] });
+          // Also refresh wallet as deposit approval affects balance
+          queryClient.invalidateQueries({ queryKey: ["wallet", user.id] });
+        }
+      )
+      .subscribe();
+
+    const withdrawalsChannel = supabase
+      .channel(`withdrawals-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'withdrawals',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          console.log('Withdrawal updated in real-time:', payload);
+          queryClient.invalidateQueries({ queryKey: ["withdrawals", user.id] });
+          // Also refresh wallet as withdrawal approval affects balance
+          queryClient.invalidateQueries({ queryKey: ["wallet", user.id] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(depositsChannel);
+      supabase.removeChannel(withdrawalsChannel);
+    };
+  }, [user?.id, queryClient]);
 
   // Create deposit request
   const createDeposit = useMutation({
@@ -242,6 +324,7 @@ export const useWallet = () => {
     createDeposit,
     createWithdrawal,
     calculateWithdrawalFee,
+    refetchWallet,
     WITHDRAWAL_FEE_PERCENTAGE,
     MINIMUM_WITHDRAWAL_AMOUNT,
   };
