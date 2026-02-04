@@ -311,21 +311,21 @@ const Wallet = () => {
                 </div>
 
                 {/* Fee Breakdown */}
-                {withdrawalBreakdown && parseFloat(withdrawAmount) > 0 && (
-                  <div className="p-4 rounded-xl bg-secondary/50 border border-border space-y-2">
+                {withdrawalBreakdown && withdrawAmountNum > 0 && (
+                  <div className="p-4 rounded-xl bg-secondary/50 border border-primary/20 space-y-3">
                     <p className="font-medium text-sm">Withdrawal Breakdown</p>
-                    <div className="space-y-1 text-sm">
+                    <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Requested Amount</span>
-                        <span>${withdrawalBreakdown.requested.toFixed(2)}</span>
+                        <span>${withdrawalBreakdown.requested.toFixed(2)} USDT</span>
                       </div>
                       <div className="flex justify-between text-destructive">
-                        <span>Processing Fee ({(WITHDRAWAL_FEE_PERCENTAGE * 100).toFixed(0)}%)</span>
-                        <span>-${withdrawalBreakdown.fee.toFixed(2)}</span>
+                        <span>Withdrawal Fee ({(WITHDRAWAL_FEE_PERCENTAGE * 100).toFixed(0)}%)</span>
+                        <span>-${withdrawalBreakdown.fee.toFixed(2)} USDT</span>
                       </div>
-                      <div className="border-t border-border pt-2 flex justify-between font-semibold">
-                        <span>You Receive</span>
-                        <span className="text-success">${withdrawalBreakdown.received.toFixed(2)}</span>
+                      <div className="border-t border-primary/20 pt-3 flex justify-between">
+                        <span className="font-bold text-primary">You will receive</span>
+                        <span className="font-bold text-lg text-primary">${withdrawalBreakdown.received.toFixed(2)} USDT</span>
                       </div>
                     </div>
                   </div>
