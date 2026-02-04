@@ -9,6 +9,7 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import SplashScreen from "@/components/SplashScreen";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import PageLoader from "@/components/PageLoader";
+import FloatingTelegramButton from "@/components/FloatingTelegramButton";
 
 // Eagerly loaded pages (frequently accessed)
 import Index from "./pages/Index";
@@ -71,6 +72,7 @@ const App = () => {
             )}
             
             <BrowserRouter>
+              <FloatingTelegramButton />
               <Suspense fallback={<PageLoader />}>
                 <Routes>
                   {/* Public Routes */}
