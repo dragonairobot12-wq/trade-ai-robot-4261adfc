@@ -8,15 +8,18 @@ import QuickStatsRow from "@/components/dashboard/QuickStatsRow";
 import TradingViewChart from "@/components/dashboard/TradingViewChart";
 import PaginatedTransactions from "@/components/dashboard/PaginatedTransactions";
 import AnimatedCounter from "@/components/dashboard/AnimatedCounter";
+import ExpiredRobotsNotification from "@/components/dashboard/ExpiredRobotsNotification";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWallet } from "@/hooks/useWallet";
 import { useProfile } from "@/hooks/useProfile";
+import { useInvestments } from "@/hooks/useInvestments";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const Dashboard = () => {
   const { user } = useAuth();
   const { wallet, isLoading: walletLoading, MINIMUM_WITHDRAWAL_AMOUNT } = useWallet();
   const { profile, isLoading: profileLoading } = useProfile();
+  const { expiredInvestments } = useInvestments();
 
   const isLoading = walletLoading || profileLoading;
   const displayName = profile?.full_name?.split(" ")[0] || user?.email?.split("@")[0] || "User";
@@ -96,6 +99,9 @@ const Dashboard = () => {
             </motion.div>
           </div>
         </motion.div>
+
+        {/* Expired Robots Notification */}
+        <ExpiredRobotsNotification expiredInvestments={expiredInvestments} />
 
         {/* Dual Balance Cards - Main Focus */}
         {isLoading ? (
